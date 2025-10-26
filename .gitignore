@@ -4,3 +4,4 @@ app.py
 memo.md
 requirements.txt
 .env
+data_backup/

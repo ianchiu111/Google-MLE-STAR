@@ -5,3 +5,6 @@ memo.md
 requirements.txt
 .env
 data_backup/
+
+test.py
+test.ipynb

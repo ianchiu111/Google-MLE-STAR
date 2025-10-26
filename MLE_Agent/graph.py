@@ -11,11 +11,12 @@ from langgraph.prebuilt import create_react_agent
 from langchain_core.tools import tool
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_experimental.utilities import PythonREPL
-from langchain_community.tools import DuckDuckGoSearchResults
+
+from ddgs import DDGS
+import httpx
 
 
-
-from MLE_Agent.agent_prompts import (
+from agent_prompts import (
     get_web_search_agent_prompt,
     get_code_generator_agent_prompt
 )
@@ -31,7 +32,7 @@ model = ChatOpenAI(
     base_url="http://127.0.0.1:11434/v1",  # ← 用 127.0.0.1 與 11434
     api_key="ollama",                      # ← 佔位即可
     model="qwen2.5:7b-instruct",         # ← 跟你 pull 的模型一致
-    temperature=0.2,
+    temperature=0,
 )
 
 
@@ -40,7 +41,7 @@ model = ChatOpenAI(
 repl = PythonREPL()
 @tool
 def run_python_code(
-    code: Annotated[str, "Python code string which should be executed in tool"],
+    code: Annotated[str, "Python code"],
 ):
     """
     use this tool to execute python code 
@@ -49,23 +50,77 @@ def run_python_code(
     try:
         outcome = repl.run(code)
         print("✴️llm python code execution outcome:\n", outcome)
+        return json.dumps({
+            "code you have generated": f"{code}",
+            "success": outcome
+            }, ensure_ascii=False)
 
-        return outcome
     except Exception as e:
         print("✴️llm python code execution error:\n", e)
         outcome = {"error": str(e)}
-        return outcome
+        return json.dumps({
+            "code you have generated": f"{code}",
+            "error": outcome
+            }, ensure_ascii=False)
+
     
 
+HEADERS = {"User-Agent": "research-bot/1.0 (+contact: you@example.com)"}
 
+def fetch_html(url: str, timeout=20.0) -> str:
+    with httpx.Client(headers=HEADERS, follow_redirects=True, timeout=timeout) as client:
+        r = client.get(url)
+        r.raise_for_status()
+        return r.text
 
-web_search_tool = DuckDuckGoSearchResults()
 @tool
-def web_search(query: Annotated[str, "用於 duckduckgo 搜尋的關鍵字"]):
+def web_search(query : Annotated[str, "The specific machine learning techniques or approaches the user is interested in."]):
     """
-    在網路上搜尋與查詢相關的資訊，輸入為查詢字串，輸出為搜尋結果摘要。
+    在網路上搜尋與查詢相關的資訊（使用 ddgs）。
+    - query: 查詢字串
+    - region: 地區與語言，例如 "tw-zh"
+    - timelimit: 時間篩選，"d"=天, "w"=週, "m"=月, "y"=年, 或 None 不限
+    - max_results: 回傳結果上限
+    - safesearch: "off" / "moderate" / "strict"
+    輸出為搜尋結果摘要的字串（與你原本函式相容）。
     """
-    return web_search_tool.run(query)
+
+    new_query = "What models are effective for " + query
+    print("✴️Logger for web_search tool: Received query:", new_query)
+    try:
+        with DDGS() as ddgs:
+            results = list(ddgs.text(
+                new_query,
+                region="tw-zh",
+                safesearch="off",
+                timelimit="m",
+                max_results=5,
+            ))
+
+        # 將結果整理成可閱讀的字串（模仿 LangChain wrapper 的摘要風格）
+        if not results:
+            summary = "（無搜尋結果）"
+        else:
+            lines = []
+            for i, r in enumerate(results, 1):
+
+                title = r.get("title") or ""
+                href = r.get("href") or ""
+                # contents = fetch_html(href) or ""
+
+                # 每筆三行：編號＋標題、連結、摘要
+                # lines.append(f"{i}. {title}\n{href}\n{contents}\n")
+                lines.append(f"{i}. {title}\n{href}\n")
+
+            summary = "\n".join(lines)
+
+        print("✴️Logger for web_search tool: Search result:\n", summary)
+        return summary
+
+    except Exception as e:
+        error = f"Web search failed due to: {str(e)}"
+        print("✴️Logger for web_search tool:", error)
+        return error
 
 
     
@@ -145,15 +200,15 @@ def create_agent(agent_name: str):
             web_search_agent_prompt = get_web_search_agent_prompt()
             web_search_agent = create_react_agent(
                 model,
-                tools=[web_search_tool],
+                tools=[web_search],
                 prompt=web_search_agent_prompt
             )
 
             def web_search_agent_node(state: MessagesState) -> Command[Literal["code_generator_agent"]]:
                 
-                print("✴️Logger for web_search_agent_node: Current state messages:", state["messages"][-1].content)
+                print("✴️Logger for web_search_agent: Current state messages:", state["messages"][-1].content)
                 result = web_search_agent.invoke(state)
-                print("✴️Logger for web_search_agent_node: Agent result:", result["messages"][-1].content)
+                print("✴️Logger for web_search_agent: Agent result:", result["messages"][-1].content)
 
                 return Command(
                     update={
@@ -177,9 +232,9 @@ def create_agent(agent_name: str):
 
             def code_generator_agent_node(state: MessagesState) -> Command[Literal["__end__"]]:
 
-                print("✴️Logger for code_generator_agent_node: Current state messages:", state["messages"][-1].content)
+                print("✴️Logger for code_generator_agent: Current state messages:", state["messages"][-1].content)
                 result = code_generator_agent.invoke(state)
-                print("✴️Logger for code_generator_agent_node: Agent result:", result["messages"][-1].content)
+                print("✴️Logger for code_generator_agent: result:", result)
 
                 return Command(
                     update={

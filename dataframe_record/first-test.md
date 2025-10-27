@@ -149,7 +149,7 @@ dtypes: float64(3), int64(4), object(3)
 memory usage: 87.2+ KB
 None
 
-✴️Logger for web_search_agent_node: Agent result: 根據提供的 DataFrame 資訊，我們可以觀察到以下變化：
+✴️  Logger for web_search_agent_node: Agent result: 根據提供的 DataFrame 資訊，我們可以觀察到以下變化：
 
 1. **缺失值填充**：
 - `CompetitionDistance`、`CompetitionOpenSinceMonth` 和 `CompetitionOpenSinceYear` 的缺失值已經被中位數填充。

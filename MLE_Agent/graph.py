@@ -12,14 +12,12 @@ from langchain_core.tools import tool
 from langgraph.checkpoint.memory import InMemorySaver
 from langchain_experimental.utilities import PythonREPL
 
-from ddgs import DDGS
-import httpx
-
 
 from agent_prompts import (
-    get_web_search_agent_prompt,
+    get_retriever_agent_prompt,
     get_code_generator_agent_prompt
 )
+from agent_tools.retriever import retriever_tool
 
 from dotenv import load_dotenv
 load_dotenv(".env")
@@ -63,67 +61,6 @@ def run_python_code(
             "error": outcome
             }, ensure_ascii=False)
 
-    
-
-HEADERS = {"User-Agent": "research-bot/1.0 (+contact: you@example.com)"}
-
-def fetch_html(url: str, timeout=20.0) -> str:
-    with httpx.Client(headers=HEADERS, follow_redirects=True, timeout=timeout) as client:
-        r = client.get(url)
-        r.raise_for_status()
-        return r.text
-
-@tool
-def web_search(query : Annotated[str, "The specific machine learning techniques or approaches the user is interested in."]):
-    """
-    在網路上搜尋與查詢相關的資訊（使用 ddgs）。
-    - query: 查詢字串
-    - region: 地區與語言，例如 "tw-zh"
-    - timelimit: 時間篩選，"d"=天, "w"=週, "m"=月, "y"=年, 或 None 不限
-    - max_results: 回傳結果上限
-    - safesearch: "off" / "moderate" / "strict"
-    輸出為搜尋結果摘要的字串（與你原本函式相容）。
-    """
-
-    new_query = "What models are effective for " + query
-    print("✴️Logger for web_search tool: Received query:", new_query)
-    try:
-        with DDGS() as ddgs:
-            results = list(ddgs.text(
-                new_query,
-                region="tw-zh",
-                safesearch="off",
-                timelimit="m",
-                max_results=5,
-            ))
-
-        # 將結果整理成可閱讀的字串（模仿 LangChain wrapper 的摘要風格）
-        if not results:
-            summary = "（無搜尋結果）"
-        else:
-            lines = []
-            for i, r in enumerate(results, 1):
-
-                title = r.get("title") or ""
-                href = r.get("href") or ""
-                # contents = fetch_html(href) or ""
-
-                # 每筆三行：編號＋標題、連結、摘要
-                # lines.append(f"{i}. {title}\n{href}\n{contents}\n")
-                lines.append(f"{i}. {title}\n{href}\n")
-
-            summary = "\n".join(lines)
-
-        print("✴️Logger for web_search tool: Search result:\n", summary)
-        return summary
-
-    except Exception as e:
-        error = f"Web search failed due to: {str(e)}"
-        print("✴️Logger for web_search tool:", error)
-        return error
-
-
-    
 
 # ================================================================
 
@@ -134,7 +71,7 @@ def create_graph():
     workflow = StateGraph(MessagesState)
 
 
-    web_search_agent_node = create_agent("web_search_agent")
+    retriever_agent_node = create_agent("retriever_agent")
     code_generator_agent_node = create_agent("code_generator_agent")
     # ablation_agent_node = create_agent("ablation_agent")
     # refinement_agent_node = create_agent("refinement_agent")
@@ -142,7 +79,7 @@ def create_graph():
     # validation_agent_node = create_agent("validation_agent")
     # report_agent_node = create_agent("report_agent")
 
-    workflow.add_node("web_search_agent", web_search_agent_node)
+    workflow.add_node("retriever_agent", retriever_agent_node)
     workflow.add_node("code_generator_agent", code_generator_agent_node)
     # workflow.add_node("ablation_agent", ablation_agent_node)
     # workflow.add_node("refinement_agent", refinement_agent_node)
@@ -151,8 +88,8 @@ def create_graph():
     # workflow.add_node("report_agent", report_agent_node)
 
 
-    workflow.add_edge(START, "web_search_agent")
-    workflow.add_edge("web_search_agent", "code_generator_agent")
+    workflow.add_edge(START, "retriever_agent")
+    workflow.add_edge("retriever_agent", "code_generator_agent")
 
     workflow.add_edge("code_generator_agent", END)
     # workflow.add_edge("foundation_agent", "ablation_agent")
@@ -182,9 +119,11 @@ def keyword_agent_process_tool(input:str):
 
     graph = create_graph()
 
+    thread_id = f"test-session-{np.random.randint(1, 1000)}"
+
     response = graph.invoke(   
         {"messages": [HumanMessage(content=input)]},
-        config={"configurable": {"thread_id": "test-session"}},
+        config={"configurable": {"thread_id": thread_id}},
     )
 
     return response["messages"][-1].content
@@ -195,30 +134,30 @@ def keyword_agent_process_tool(input:str):
 def create_agent(agent_name: str):
     match agent_name:
 
-        case "web_search_agent":
+        case "retriever_agent":
 
-            web_search_agent_prompt = get_web_search_agent_prompt()
-            web_search_agent = create_react_agent(
+            retriever_agent_prompt = get_retriever_agent_prompt()
+            retriever_agent = create_react_agent(
                 model,
-                tools=[web_search],
-                prompt=web_search_agent_prompt
+                tools=[retriever_tool],
+                prompt=retriever_agent_prompt
             )
 
-            def web_search_agent_node(state: MessagesState) -> Command[Literal["code_generator_agent"]]:
+            def retriever_agent_node(state: MessagesState) -> Command[Literal["code_generator_agent"]]:
                 
-                print("✴️Logger for web_search_agent: Current state messages:", state["messages"][-1].content)
-                result = web_search_agent.invoke(state)
-                print("✴️Logger for web_search_agent: Agent result:", result["messages"][-1].content)
+                print("✴️  Logger for retriever_agent: Current state messages:", state["messages"][-1].content)
+                result = retriever_agent.invoke(state)
+                print("✴️  Logger for retriever_agent: Agent result:", result["messages"][-1].content)
 
                 return Command(
                     update={
                         "messages": [
-                            AIMessage(content=result["messages"][-1].content, name="web_search_agent")
+                            AIMessage(content=result["messages"][-1].content, name="retriever_agent")
                         ]
                     },
                     goto="code_generator_agent",
                 )
-            return web_search_agent_node
+            return retriever_agent_node
 
 
         case "code_generator_agent":
@@ -232,9 +171,9 @@ def create_agent(agent_name: str):
 
             def code_generator_agent_node(state: MessagesState) -> Command[Literal["__end__"]]:
 
-                print("✴️Logger for code_generator_agent: Current state messages:", state["messages"][-1].content)
+                print("✴️  Logger for code_generator_agent: Current state messages:", state["messages"][-1].content)
                 result = code_generator_agent.invoke(state)
-                print("✴️Logger for code_generator_agent: result:", result)
+                print("✴️  Logger for code_generator_agent: result:", result)
 
                 return Command(
                     update={

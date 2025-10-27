@@ -1,3 +1,4 @@
+import os
 from typing import TypedDict, List, Dict, Any
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage, SystemMessage
@@ -9,11 +10,13 @@ import requests
 from typing import Annotated
 from bs4 import BeautifulSoup
 from readability import Document
-import logging
-
 import re
 from urllib.parse import urlparse
 
+import dotenv
+dotenv.load_dotenv(".env")
+
+import logging
 LOG_FORMAT = "[%(asctime)s] %(levelname)s %(name)s :: %(message)s"
 logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
 logger = logging.getLogger("deep_research")
@@ -58,17 +61,16 @@ AUTO_FETCH_TOPK = 3            # 每輪自動抓前 3 個多樣化來源的頁�
 
 
 # ---------- API Key ----------
-my_TavilyClient_key   = "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"
-
+my_TavilyClient_key = os.environ["my_TavilyClient_key"]
 
 # ---------- 工具：搜尋 ----------
-tavily = TavilyClient(api_key=my_TavilyClient_key)
-@tool("web_search", return_direct=False)
+tavily_client = TavilyClient(api_key=my_TavilyClient_key)
+@tool
 def web_search(query: str, k: int = 5) -> List[Dict[str, str]]:
     """用搜尋引擎找相關頁面，回傳 [{'title','url','snippet'}]"""
     try:
         logger.info("[TOOL:web_search] q=%s k=%s", query, k)
-        res = tavily.search(query=query, max_results=k)
+        res = tavily_client.search(query=query, max_results=k)
         out = []
         for r in res.get("results", []):
             out.append({"title": r.get("title",""),
@@ -82,7 +84,7 @@ def web_search(query: str, k: int = 5) -> List[Dict[str, str]]:
 
 
 # ---------- 工具：抓頁面 ----------
-@tool("fetch_page", return_direct=False)
+@tool
 def fetch_page(url: str) -> str:
     """抓取網頁並清洗成可讀文字"""
     headers = {"User-Agent": "Mozilla/5.0 (deep-research/0.1)"}
@@ -371,19 +373,19 @@ def create_retriever_workflow():
 
 @tool
 def retriever_tool(
-    user_query: Annotated[str, "string query"]
+    query: Annotated[str, "string query"]
 ):
     """
     use this tool to call retriever_tool function.
     Args:
-        user_query (str) :
+        query (str) :
         string query.
     Returns:
         A ML note including latest Machine Learning models and code examples for prediction from Github.
     """
-    logger.info("✴️ Starting retriever_tool with query: %s", user_query)
+    logger.info("✴️ Starting retriever_tool with query: %s", query)
     init: RState = {
-        "messages": [HumanMessage(content= user_query )],
+        "messages": [HumanMessage(content= query )],
         "queries": ["Machine Learning Models on Github", 
                     "Code Example for Machine Learning Models",
                     "Machine Learning Models Algorithms"

@@ -1,10 +1,14 @@
 
 
-app.py
 memo.md
-requirements.txt
+
 .env
+
 data_backup/
+
+data/information_from_agent/
+
+dataframe_record
 
 test.py
 test.ipynb

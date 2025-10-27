@@ -1,14 +1,10 @@
 
 
-memo.md
-
-.env
-
-data_backup/
-
-data/information_from_agent/
-
+data_backup
+data/information_from_agent
 dataframe_record
 
 test.py
 test.ipynb
+memo.md
+.env

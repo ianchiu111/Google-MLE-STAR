@@ -1,0 +1,9 @@
+🧠 MLE-STAR: Machine Learning Engineering via Search and Targeted Refinement
+🎯 This is the flagship automation workflow for ML engineering tasks
+
+❌ MLE-STAR workflow template not found
+Please ensure the template is installed at:
+/Users/yuchen/Google-MLE-Agent/src/cli/simple-commands/templates/mle-star-workflow.json
+
+npm warn deprecated boolean@3.2.0: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead

@@ -1,461 +1,239 @@
-#!/usr/bin/env python3
-"""
-MLE-STAR Agent Framework - Complete Single File Implementation
-Machine Learning Engineering Agent via Search and Targeted Refinement
+# mle_star_tool_node.py
+from __future__ import annotations
+import os, re, shutil, subprocess, datetime, json
+from typing import Optional, Literal, Dict, Any
+from pydantic import BaseModel, Field, validator
 
-This framework implements an intelligent multi-agent system that:
-- Uses Web Search to find task-specific ML models and techniques
-- Generates and executes Python code for ML tasks
-- Leverages LangGraph for agent orchestration
-- Based on Google Cloud's MLE-STAR research
-
-Author: Claude Code
-Version: 1.0.0
-"""
-
-import os
-import json
-from typing import Annotated, Literal
-from typing_extensions import TypedDict
-
-# LangChain & LangGraph imports
-from langchain_core.messages import HumanMessage, SystemMessage
+# LangChain / LangGraph
 from langchain_core.tools import tool
-from langchain_openai import ChatOpenAI
-from langgraph.graph import StateGraph, START, END, MessagesState
-from langgraph.prebuilt import create_react_agent
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.prebuilt import ToolNode
+from langgraph.graph import StateGraph, START, END
+from langchain_core.messages import AIMessage
 
-# Experimental tools
-from langchain_experimental.utilities import PythonREPL
+# ---------- 參數 Schema ----------
+class MLEStarArgs(BaseModel):
+    dataset: str = Field(..., description="CSV 資料集路徑")
+    target: str = Field(..., description="目標欄位名稱")
+    output_dir: Optional[str] = Field(None, description="模型與輸出目錄，例如 ./models/churn")
+    name: Optional[str] = Field(None, description='實驗名稱，例如 "revenue-prediction"')
 
-# Web search
-from duckduckgo_search import DDGS
-
-# Load environment variables
-from dotenv import load_dotenv
-load_dotenv()
-
-
-# ============================================================================
-# CONFIGURATION
-# ============================================================================
-
-class Config:
-    """Configuration for the MLE-STAR framework"""
-
-    # LLM Configuration (using Ollama by default)
-    LLM_BASE_URL = os.getenv("OPENAI_API_BASE", "http://127.0.0.1:11434/v1")
-    LLM_API_KEY = os.getenv("OPENAI_API_KEY", "ollama")  # Ollama doesn't need real key
-    LLM_MODEL = os.getenv("LLM_MODEL", "qwen2.5:7b-instruct")
-    LLM_TEMPERATURE = 0
-
-    # Alternative: Use OpenAI ChatGPT
-    # LLM_BASE_URL = "https://api.openai.com/v1"
-    # LLM_API_KEY = os.getenv("OPENAI_API_KEY")
-    # LLM_MODEL = "gpt-4o-mini"
-
-    # Web Search Configuration
-    SEARCH_REGION = "tw-zh"
-    SEARCH_SAFESEARCH = "off"
-    SEARCH_TIMELIMIT = "m"  # m = month, d = day, w = week, y = year
-    SEARCH_MAX_RESULTS = 5
-
-    # Output directories
-    OUTPUT_DIR = "data/information_from_agent/"
-
-
-# ============================================================================
-# AGENT PROMPTS
-# ============================================================================
-
-WEB_SEARCH_AGENT_PROMPT = """You are an elite Machine Learning/AI Researcher and Information Specialist.
-
-Your Mission:
-Search the web for the latest and most effective machine learning techniques, approaches, and best practices relevant to the user's specific query or task.
-
-Focus Areas:
-1. Model Selection: Find state-of-the-art models and algorithms for the task
-2. Feature Engineering: Discover effective feature engineering techniques
-3. Data Preprocessing: Identify best practices for data cleaning and preparation
-4. Hyperparameter Tuning: Locate optimal hyperparameter strategies
-5. Evaluation Metrics: Find appropriate metrics for the task
-
-Output Format:
-Organize your findings clearly by technique, including:
-- Description of the approach
-- Why it's effective for this task
-- Links to references (papers, documentation, tutorials)
-- Code examples when available
-
-Always search for the most recent and relevant information. Use the web_search tool to find information.
-"""
-
-CODE_GENERATOR_AGENT_PROMPT = """You are an elite Machine Learning Engineer and Data Scientist.
-
-Your Mission (4 Steps):
-
-STEP 1: Load Dataset & Understand Data
-- Load the dataset from the provided path
-- Explore data characteristics: shape, columns, data types, missing values
-- Perform basic statistical analysis
-- Visualize key patterns and distributions
-
-STEP 2: Data Cleaning & Feature Engineering
-- Handle missing values appropriately
-- Encode categorical variables
-- Create new features based on domain knowledge
-- Scale/normalize features if needed
-- Handle outliers if necessary
-
-STEP 3: Train Models & Evaluate
-- Split data into train/validation/test sets
-- Train multiple ML models (try at least 3 different algorithms)
-- Tune hyperparameters using cross-validation
-- Compare model performance
-- Select the best model
-- Generate predictions
-
-Libraries Available:
-- scikit-learn (sklearn)
-- XGBoost
-- LightGBM
-- CatBoost
-- TensorFlow
-- PyTorch
-- pandas, numpy
-
-STEP 4: Save Results
-- Save all generated code to files
-- Save trained models
-- Save predictions and evaluation metrics
-- Save visualizations
-- Output location: data/information_from_agent/
-
-Evaluation Metrics:
-- Classification: Accuracy, Precision, Recall, F1-score, ROC-AUC
-- Regression: RMSE, MAE, R², MAPE
-
-IMPORTANT:
-1. Generate complete, executable Python code
-2. Handle errors gracefully
-3. Document your code with comments
-4. Save all outputs to the specified directory
-5. Use the run_python_code tool to execute your code
-6. If code fails, analyze the error and fix it
-7. Iterate until you get working code
-
-Generate code step by step and execute it using the run_python_code tool.
-"""
-
-
-# ============================================================================
-# TOOLS
-# ============================================================================
-
-# Initialize Python REPL for code execution
-repl = PythonREPL()
-
-@tool
-def web_search(query: Annotated[str, "The specific machine learning technique, algorithm, or approach to search for"]) -> str:
-    """
-    Search the web for machine learning techniques, models, and best practices.
-
-    Args:
-        query: The ML technique or approach to search for
-
-    Returns:
-        Formatted search results with titles, snippets, and URLs
-    """
-    # Enhance query for better ML results
-    enhanced_query = f"What models are effective for {query}"
-
-    try:
-        with DDGS() as ddgs:
-            results = list(ddgs.text(
-                enhanced_query,
-                region=Config.SEARCH_REGION,
-                safesearch=Config.SEARCH_SAFESEARCH,
-                timelimit=Config.SEARCH_TIMELIMIT,
-                max_results=Config.SEARCH_MAX_RESULTS,
-            ))
-
-        if not results:
-            return f"No search results found for: {query}"
-
-        # Format results
-        formatted_results = f"Search Results for: {query}\n\n"
-        for idx, result in enumerate(results, 1):
-            formatted_results += f"{idx}. {result['title']}\n"
-            formatted_results += f"   URL: {result['href']}\n"
-            formatted_results += f"   {result['body']}\n\n"
-
-        return formatted_results
-
-    except Exception as e:
-        return f"Error during web search: {str(e)}"
-
-
-@tool
-def run_python_code(code: Annotated[str, "Complete Python code to execute"]) -> str:
-    """
-    Execute Python code in a persistent REPL environment.
-
-    Args:
-        code: Python code string to execute
-
-    Returns:
-        JSON string with execution results or error message
-    """
-    try:
-        # Create output directory if it doesn't exist
-        os.makedirs(Config.OUTPUT_DIR, exist_ok=True)
-
-        # Execute the code
-        outcome = repl.run(code)
-
-        return json.dumps({
-            "status": "success",
-            "code_executed": code,
-            "output": outcome if outcome else "Code executed successfully (no output)"
-        }, indent=2)
-
-    except Exception as e:
-        return json.dumps({
-            "status": "error",
-            "code_executed": code,
-            "error": str(e),
-            "error_type": type(e).__name__
-        }, indent=2)
-
-
-# ============================================================================
-# LLM & AGENT SETUP
-# ============================================================================
-
-def create_llm():
-    """Create and configure the LLM instance"""
-    return ChatOpenAI(
-        base_url=Config.LLM_BASE_URL,
-        api_key=Config.LLM_API_KEY,
-        model=Config.LLM_MODEL,
-        temperature=Config.LLM_TEMPERATURE,
+    # STAR 流程控制
+    search_iterations: int = Field(3, ge=1, description="搜尋迭代次數（預設 3）")
+    refinement_iterations: int = Field(5, ge=1, description="精煉迭代次數（預設 5）")
+    max_agents: int = Field(6, ge=1, description="可併發 agent 上限（預設 6）")
+    interactive: bool = Field(False, description="是否使用互動模式（預設 False）")
+    chaining: bool = Field(True, description="是否啟用 stream chaining（預設 True）")
+    timeout_ms: int = Field(4 * 60 * 60 * 1000, description="CLI 逾時（毫秒），預設 4 小時")
+    verbose: bool = Field(False, description="顯示詳細日誌（--verbose）")
+    output_format: Literal["text", "stream-json"] = Field(
+        "text", description="CLI 輸出格式（預設 text；stream-json 用於串連）"
     )
 
-
-def create_agent(agent_name: str, llm, tools: list, system_prompt: str):
-    """
-    Create a ReAct agent with specified tools and prompt.
-
-    Args:
-        agent_name: Name of the agent
-        llm: Language model instance
-        tools: List of tools available to the agent
-        system_prompt: System prompt for the agent
-
-    Returns:
-        Configured agent
-    """
-    return create_react_agent(
-        llm,
-        tools=tools,
-        state_modifier=system_prompt
+    # ★ 這裡是你要的「不用 Claude 模型，而接 OAI-compatible 端點（Ollama）」設定
+    llm_base_url: Optional[str] = Field(
+        "http://127.0.0.1:11434/v1",
+        description="OpenAI-compatible base URL（Ollama 預設 http://127.0.0.1:11434/v1）",
+    )
+    llm_api_key: Optional[str] = Field(
+        "ollama",
+        description="OpenAI-compatible 端點的 API key/token（Ollama 可填佔位字串）",
+    )
+    llm_model: Optional[str] = Field(
+        "qwen2.5:7b-instruct",
+        description="要走的模型 slug（會寫入 ANTHROPIC_MODEL 讓 CLI 認得）",
+    )
+    use_claude_cli: bool = Field(
+        True,
+        description="是否啟用 Claude Code CLI 整合旗標（--claude）。即使不是 Anthropic，也建議保持 True 讓 MLE-STAR 正常運轉。",
     )
 
+# ---------- Tool 實作 ----------
+@tool("mle_star", args_schema=MLEStarArgs)
+def mle_star_tool(
+    dataset: str,
+    target: str,
+    output_dir: Optional[str] = None,
+    name: Optional[str] = None,
+    search_iterations: int = 3,
+    refinement_iterations: int = 5,
+    max_agents: int = 6,
+    interactive: bool = False,
+    chaining: bool = True,
+    timeout_ms: int = 4 * 60 * 60 * 1000,
+    verbose: bool = False,
+    output_format: str = "text",
 
-# ============================================================================
-# LANGGRAPH WORKFLOW
-# ============================================================================
-
-def create_mle_star_graph():
+    # ollama QWEN Model INSTEAD OF CLAUDE Code API
+    llm_base_url: Optional[str] = "http://127.0.0.1:11434/v1",
+    llm_api_key: Optional[str] = "ollama",
+    llm_model: Optional[str] = "qwen2.5:7b-instruct",
+    use_claude_cli: bool = True,
+) -> Dict[str, Any]:
     """
-    Create the MLE-STAR agent workflow using LangGraph.
+    以 CLI 方式執行 MLE-STAR Workflow，並回傳結果摘要與日誌路徑。
 
-    Workflow:
-    START → web_search_agent → code_generator_agent → END
-
-    Returns:
-        Compiled LangGraph workflow
+    重點：
+      - 我們仍使用 `claude-flow automation mle-star` 的自動化指令。
+      - 但把 Claude Code 的 BASE_URL / TOKEN / MODEL 指到你的 OpenAI-compatible 端點（例如本機 Ollama）。
+        依官方文件，設定 ANTHROPIC_BASE_URL / ANTHROPIC_AUTH_TOKEN / ANTHROPIC_MODEL 即可。 
     """
-    # Initialize LLM
-    llm = create_llm()
 
-    # Create agents with their specific tools and prompts
-    web_search_agent_executor = create_agent(
-        agent_name="web_search_agent",
-        llm=llm,
-        tools=[web_search],
-        system_prompt=WEB_SEARCH_AGENT_PROMPT
-    )
-
-    code_generator_agent_executor = create_agent(
-        agent_name="code_generator_agent",
-        llm=llm,
-        tools=[run_python_code],
-        system_prompt=CODE_GENERATOR_AGENT_PROMPT
-    )
-
-    # Create the workflow graph
-    workflow = StateGraph(MessagesState)
-
-    # Add agent nodes
-    workflow.add_node("web_search_agent", web_search_agent_executor)
-    workflow.add_node("code_generator_agent", code_generator_agent_executor)
-
-    # Define the workflow edges
-    workflow.add_edge(START, "web_search_agent")
-    workflow.add_edge("web_search_agent", "code_generator_agent")
-    workflow.add_edge("code_generator_agent", END)
-
-    # Compile with checkpointer for state management
-    checkpointer = MemorySaver()
-    graph = workflow.compile(checkpointer=checkpointer)
-
-    return graph
-
-
-# ============================================================================
-# MAIN EXECUTION
-# ============================================================================
-
-def run_mle_star(query: str, thread_id: str = "default-thread"):
-    """
-    Execute the MLE-STAR framework with a given query.
-
-    Args:
-        query: User's machine learning task description
-        thread_id: Unique identifier for this conversation thread
-
-    Returns:
-        Final response from the agent workflow
-    """
-    print("=" * 80)
-    print("MLE-STAR Agent Framework")
-    print("=" * 80)
-    print(f"\nQuery: {query}\n")
-    print("-" * 80)
-
-    # Create the graph
-    graph = create_mle_star_graph()
-
-    # Configure thread for state management
-    config = {
-        "configurable": {"thread_id": thread_id},
-        "recursion_limit": 50
-    }
-
-    # Prepare input
-    input_message = {
-        "messages": [HumanMessage(content=query)]
-    }
-
-    # Execute the workflow
-    print("\n🔍 Starting Web Search Agent...\n")
-
-    final_state = None
-    for event in graph.stream(input_message, config, stream_mode="values"):
-        # Get the last message
-        if "messages" in event and len(event["messages"]) > 0:
-            last_message = event["messages"][-1]
-
-            # Print agent outputs
-            if hasattr(last_message, "content") and last_message.content:
-                print(f"\n{last_message.content}\n")
-                print("-" * 80)
-
-        final_state = event
-
-    print("\n✅ Workflow Completed!\n")
-    print("=" * 80)
-
-    return final_state
-
-
-def print_usage_examples():
-    """Print usage examples for the framework"""
-    print("""
-Usage Examples:
-===============
-
-Example 1: Sales Prediction
-----------------------------
-query = '''
-Please use Python to perform Machine Learning on data/train.csv (Rossmann Store Sales).
-Use 'Sales' as the prediction target.
-Perform feature engineering and train multiple models.
-Save all results to data/information_from_agent/
-'''
-
-Example 2: Classification Task
--------------------------------
-query = '''
-I have a dataset at data/classification.csv.
-Please build a classification model to predict the 'target' column.
-Try RandomForest, XGBoost, and LightGBM.
-Save the best model and evaluation metrics.
-'''
-
-Example 3: Custom Analysis
----------------------------
-query = '''
-Analyze data/customer_data.csv and build a churn prediction model.
-Perform EDA, feature engineering, and model selection.
-Use cross-validation and save results.
-'''
-
-Running the Framework:
-----------------------
-if __name__ == "__main__":
-    query = "Your ML task description here..."
-    results = run_mle_star(query, thread_id="session-001")
-    """)
-
-
-# ============================================================================
-# COMMAND LINE INTERFACE
-# ============================================================================
-
-if __name__ == "__main__":
-    import sys
-
-    # Check if query is provided as command line argument
-    if len(sys.argv) > 1:
-        # Join all arguments as the query
-        user_query = " ".join(sys.argv[1:])
+    # 1) 找到 CLI（優先使用全域 claude-flow；否則退回 npx）
+    cmd: list[str]
+    cf = shutil.which("claude-flow")
+    if cf:
+        cmd = [cf, "automation", "mle-star"]
     else:
-        # Default example query
-        print("No query provided. Using default example...\n")
-        user_query = """
-Please use Python to perform Machine Learning on data/train.csv.
-This is the Rossmann Store Sales dataset.
-Use 'Sales' as the prediction target.
+        npx = shutil.which("npx")
+        if not npx:
+            raise RuntimeError("找不到 'claude-flow' 或 'npx'，請先依官方文件完成安裝。")
+        cmd = [npx, "claude-flow@alpha", "automation", "mle-star"]
 
-Steps:
-1. Load and explore the data
-2. Perform data cleaning and feature engineering
-3. Train multiple ML models (RandomForest, XGBoost, LightGBM)
-4. Evaluate and compare models
-5. Save all results, models, and visualizations to data/information_from_agent/
+    # 2) 組合旗標（依官方 wiki）
+    cmd += ["--dataset", dataset, "--target", target]
+    if use_claude_cli:
+        # 啟用 CLI 的 LLM 整合；實際模型將由環境變數決定（可指到 Ollama）
+        cmd += ["--claude"]
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+        cmd += ["--output", output_dir]
+    if name:
+        cmd += ["--name", name]
+    if search_iterations:
+        cmd += ["--search-iterations", str(search_iterations)]
+    if refinement_iterations:
+        cmd += ["--refinement-iterations", str(refinement_iterations)]
+    if max_agents:
+        cmd += ["--max-agents", str(max_agents)]
+    if interactive:
+        cmd += ["--interactive"]
+    else:
+        cmd += ["--non-interactive"]
+    cmd += ["--output-format", output_format]
+    cmd += ["--timeout", str(timeout_ms)]
+    if chaining:
+        cmd += ["--chaining"]
+    else:
+        cmd += ["--no-chaining"]
+    if verbose:
+        cmd += ["--verbose"]
 
-Also load data/store.csv for additional store features if helpful.
-"""
+    # 3) 建立子行程環境：把 OAI-compatible 端點寫進 Claude Code 的環境變數
+    #    參考官方“Using Claude Code with Open Models”：只要提供 ANTHROPIC_BASE_URL / AUTH_TOKEN / MODEL 即可。
+    env = os.environ.copy()
+    if llm_base_url:
+        env["ANTHROPIC_BASE_URL"] = llm_base_url
+    if llm_api_key:
+        env["ANTHROPIC_AUTH_TOKEN"] = llm_api_key
+    if llm_model:
+        env["ANTHROPIC_MODEL"] = llm_model
 
-    # Run the framework
+    # 基本健檢：若使用 CLI 整合但沒任何可用的身分/端點資訊，就提醒
+    if use_claude_cli and not (
+        env.get("ANTHROPIC_API_KEY") or (env.get("ANTHROPIC_BASE_URL") and env.get("ANTHROPIC_AUTH_TOKEN"))
+    ):
+        raise RuntimeError(
+            "請提供 ANTHROPIC_API_KEY（雲端 Anthropic）或 llm_base_url + llm_api_key（本機/代理端點）。"
+        )
+
+    # 4) 執行並擷取輸出（stdout + stderr）
+    completed = subprocess.run(
+        cmd,
+        check=False,
+        text=True,
+        capture_output=True,
+        env=env,  # ★ 關鍵：把上面注入的 OAI-compatible 設定傳給 CLI
+    )
+    merged_out = (completed.stdout or "") + (("\n" + completed.stderr) if completed.stderr else "")
+
+    # 5) 解析摘要
+    exec_id = None
+    m = re.search(r"Execution ID:\s*(\S+)", merged_out)
+    if m:
+        exec_id = m.group(1)
+
+    tasks_done = None
+    m2 = re.search(r"Results:\s*(\d+/\d+)\s*tasks\s*completed", merged_out, re.I)
+    if m2:
+        tasks_done = m2.group(1)
+
+    # 6) 寫入日誌檔
+    ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    log_dir = output_dir or "."
+    os.makedirs(log_dir, exist_ok=True)
+    log_path = os.path.join(log_dir, f"mle_star_{ts}.log")
+    with open(log_path, "w", encoding="utf-8") as f:
+        f.write(merged_out)
+
+    # 只回傳末尾 200 行，避免訊息過長
+    tail_lines = merged_out.strip().splitlines()[-200:]
+    return {
+        "ok": completed.returncode == 0,
+        "returncode": completed.returncode,
+        "command": cmd,
+        "execution_env": {
+            "ANTHROPIC_BASE_URL": env.get("ANTHROPIC_BASE_URL"),
+            "ANTHROPIC_MODEL": env.get("ANTHROPIC_MODEL"),
+            # 不回傳 token
+        },
+        "execution_id": exec_id,
+        "tasks_completed": tasks_done,
+        "log_path": log_path,
+        "output_dir": output_dir,
+        "tail": "\n".join(tail_lines),
+    }
+
+# ---------- 把 Tool 包成 ToolNode ----------
+mle_star_tool_node = ToolNode([mle_star_tool])
+
+from langgraph.graph import StateGraph, START, END, MessagesState
+# ---------- （選用）最小 Graph：直接從 ToolNode 開始執行 ----------
+def build_minimal_graph():
+    graph = StateGraph(MessagesState)
+    graph.add_node("mle_star", mle_star_tool_node)
+    graph.add_edge(START, "mle_star")
+    graph.add_edge("mle_star", END)
+    return graph.compile()
+
+def run_star_via_toolnode(args: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    手動構造一個 AIMessage，指定要呼叫 'mle_star'，把參數丟給 ToolNode。
+    回傳執行後的 state（其中最後一則 message 會是 ToolMessage，content 即為 tool 的回傳 dict）。
+    """
+    app = build_minimal_graph()
+    ai = AIMessage(
+        content="Run MLE-STAR",
+        tool_calls=[{"name": "mle_star", "args": args, "id": "call_mle_star_1"}],
+    )
+    out_state = app.invoke({"messages": [ai]})
+    last_msg = out_state["messages"][-1]
     try:
-        results = run_mle_star(user_query, thread_id="mle-star-session-001")
+        payload = json.loads(last_msg.content) if isinstance(last_msg.content, str) else last_msg.content
+    except Exception:
+        payload = {"raw": last_msg.content}
+    return payload
 
-        print("\n" + "=" * 80)
-        print("Framework Execution Summary")
-        print("=" * 80)
-        print(f"\nTotal messages exchanged: {len(results.get('messages', []))}")
-        print(f"\nCheck output directory: {Config.OUTPUT_DIR}")
-        print("\nTo run with custom query:")
-        print("  python mle_star_complete.py 'Your custom ML task here'")
-        print("=" * 80)
+# ---------- （範例）實際呼叫 ----------
+if __name__ == "__main__":
+    example_args = {
+        "dataset": "data/train.csv",
+        "target": "Sales",
+        "output_dir": "data/",
+        "name": "sales-prediction",
+        "search_iterations": 5,
+        "refinement_iterations": 8,
+        "max_agents": 8,
+        "interactive": False,
+        "chaining": True,
+        "timeout_ms": 4 * 60 * 60 * 1000,
+        "verbose": True,
+        "output_format": "text",
 
-    except Exception as e:
-        print(f"\n❌ Error during execution: {str(e)}")
-        print(f"Error type: {type(e).__name__}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+        # ★ 你的本機 Ollama（OpenAI-compatible）模型設定
+        "llm_base_url": "http://127.0.0.1:11434/v1",
+        "llm_api_key": "ollama",
+        "llm_model": "qwen2.5:7b-instruct",
+        "use_claude_cli": True,  # 仍啟用 CLI 整合，但實際模型是上面這個
+    }
+    result = run_star_via_toolnode(example_args)
+    print(json.dumps(result, ensure_ascii=False, indent=2))

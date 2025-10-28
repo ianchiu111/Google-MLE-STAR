@@ -49,9 +49,12 @@ ollama serve
 echo "OPENAI_API_KEY=your-api-key-here" > .env
 ```
 
-Then edit `mle_star_complete.py` lines 58-62 to use OpenAI configuration.
+### 3. Setup Claude Flow
+```zsh
+npm i -g claude-flow@latest
 
----
+---claude-flow automation mle-star --help                                                       
+```
 
 ## Basic Usage
 

@@ -56,3 +56,17 @@ Due to the resource limitation, so choose duckduckgo search engine as web search
 ## 2️⃣ Claude-Flow Service in Sales Prediction Workflow
 
 > contents
+
+### Some Issues
+1. In Claude-flow github repo doesn't mention MLE-STAR, but the wiki page does. This suggests MLE-STAR might be an experimental or incomplete feature. Let me verify the wiki page exists and check if there's a specific alpha version.
+    1. github repo <main> 屬於 v2.7.12
+    2. mle-star framework (alpha version) 是在 v2.7.26 中
+<img src="images/workflow-undefined-issue.png" alt="image" width="600"/>
+    3. ✅ Finally Fix it with claude code. Now can try in command line interface.
+    ``` bash
+    # Using Python wrapper
+    python3 call_claude_flow_tool.py --dataset data/train.csv --target Sales --output ./models/ --name "sales-prediction"
+
+    # Or directly with claude-flow CLI
+    claude-flow automation mle-star --dataset data/train.csv --target Sales --claude --name "my-experiment"
+```

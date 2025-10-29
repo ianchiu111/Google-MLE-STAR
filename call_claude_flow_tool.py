@@ -38,7 +38,7 @@ class ClaudeFlowMLESTARService:
         dataset: str,
         target: str,
         output_dir: str = "./models/",
-        name: str = "mle-star-workflow",
+        # name: str = "mle-star-workflow",
         search_iterations: int = 5,
         refinement_iterations: int = 8,
         max_agents: int = 8,
@@ -62,7 +62,7 @@ class ClaudeFlowMLESTARService:
         self.dataset = dataset
         self.target = target
         self.output_dir = output_dir
-        self.name = name
+        # self.name = name
         self.search_iterations = search_iterations
         self.refinement_iterations = refinement_iterations
         self.max_agents = max_agents
@@ -107,7 +107,7 @@ class ClaudeFlowMLESTARService:
             "--dataset", self.dataset,
             "--target", self.target,
             "--output", self.output_dir,
-            "--name", self.name,
+            # "--name", self.name,
             "--search-iterations", str(self.search_iterations),
             "--refinement-iterations", str(self.refinement_iterations),
             "--max-agents", str(self.max_agents),
@@ -155,7 +155,7 @@ class ClaudeFlowMLESTARService:
 | Dataset | {self.dataset} |
 | Target Column | {self.target} |
 | Output Directory | {self.output_dir} |
-| Workflow Name | {self.name} |
+| Workflow Name | !! no name here !! |
 | Search Iterations | {self.search_iterations} |
 | Refinement Iterations | {self.refinement_iterations} |
 | Max Agents | {self.max_agents} |
@@ -302,7 +302,7 @@ def call_claude_flow_service(
     dataset: str,
     target: str,
     output_dir: str = "./models/",
-    name: str = "mle-star-workflow",
+    # name: str = "mle-star-workflow",
     search_iterations: int = 5,
     refinement_iterations: int = 8,
     max_agents: int = 8,
@@ -354,7 +354,7 @@ def call_claude_flow_service(
         dataset=dataset,
         target=target,
         output_dir=output_dir,
-        name=name,
+        # name=name,
         search_iterations=search_iterations,
         refinement_iterations=refinement_iterations,
         max_agents=max_agents,
@@ -429,7 +429,7 @@ if __name__ == "__main__":
         dataset=args.dataset,
         target=args.target,
         output_dir=args.output,
-        name=args.name,
+        # name=args.name,
         search_iterations=args.search_iterations,
         refinement_iterations=args.refinement_iterations,
         max_agents=args.max_agents,

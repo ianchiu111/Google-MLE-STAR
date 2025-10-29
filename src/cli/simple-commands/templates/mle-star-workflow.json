@@ -1,244 +1,424 @@
 {
-  "name": "MLE-STAR Machine Learning Engineering",
-  "description": "Automated ML pipeline development using Search and Targeted Refinement methodology",
-  "version": "1.0",
-
+  "name": "MLE-STAR Workflow",
+  "version": "2.0",
+  "description": "Machine Learning Engineering via Search and Targeted Refinement - Multi-Agent System",
   "metadata": {
-    "methodology": "Search → Foundation → Refinement → Ensemble → Validation",
+    "createdAt": "2025-10-29",
+    "framework": "claude-flow",
+    "implementationType": "minimal-viable-product",
+    "executionMode": "hierarchical",
     "expected_runtime": "2-4 hours"
   },
-
   "variables": {
-    "dataset": "${DATASET_PATH}",
-    "target": "${TARGET_COLUMN}",
-    "output_dir": "./mle-star-output",
-    "search_iterations": 3,
-    "refinement_iterations": 5,
-    "ensemble_size": 5
-  },
-  "agents": [
-    {
-      "id": "search-coordinator",
-      "type": "coordinator",
-      "name": "Web Search Coordinator",
-      "capabilities": ["web-search", "knowledge-synthesis"]
-    },
-    {
-      "id": "ml-researcher",
-      "type": "researcher",
-      "name": "ML Model Researcher",
-      "capabilities": ["model-search", "paper-analysis", "kaggle-solutions"]
-    },
-    {
-      "id": "data-analyst",
-      "type": "analyst",
-      "name": "Data Analysis Expert",
-      "capabilities": ["eda", "feature-analysis", "data-quality"]
-    },
-    {
-      "id": "ml-engineer-1",
-      "type": "implementer",
-      "name": "ML Engineer Alpha",
-      "capabilities": ["model-implementation", "feature-engineering", "optimization"]
-    },
-    {
-      "id": "ml-engineer-2",
-      "type": "implementer",
-      "name": "ML Engineer Beta",
-      "capabilities": ["model-implementation", "ensemble-methods", "hyperparameter-tuning"]
-    },
-    {
-      "id": "ablation-analyst",
-      "type": "analyst",
-      "name": "Ablation Study Analyst",
-      "capabilities": ["performance-analysis", "component-testing", "impact-measurement"]
-    },
-    {
-      "id": "ensemble-architect",
-      "type": "coordinator",
-      "name": "Ensemble Strategy Architect",
-      "capabilities": ["ensemble-design", "model-combination", "performance-optimization"]
-    },
-    {
-      "id": "validator",
-      "type": "tester",
-      "name": "Robustness Validator",
-      "capabilities": ["data-leakage-detection", "validation", "debugging"]
-    }
-  ],
-  "tasks": [
-    {
-      "id": "web-search",
-      "name": "Web Search for ML Solutions",
-      "type": "research",
-      "description": "Search for state-of-the-art models and successful approaches",
-      "assignTo": ["ml-researcher"],
-      "parallel": true,
-      "claudePrompt": "Search for effective ML models and approaches for ${target} prediction using ${dataset}. Focus on: 1) State-of-the-art models, 2) Kaggle competition solutions, 3) Research papers with implementations, 4) Pre-trained models. Provide a comprehensive list of approaches with their key characteristics.",
-      "input": {
-        "dataset": "${dataset}",
-        "target": "${target}",
-        "iterations": "${search_iterations}"
-      },
-      "output": {
-        "models_found": "array",
-        "approaches": "array",
-        "initial_pipeline": "object"
-      }
-    },
-    {
-      "id": "data-analysis",
-      "name": "Comprehensive Data Analysis",
-      "type": "analysis",
-      "description": "Analyze dataset characteristics and requirements",
-      "assignTo": "data-analyst",
-      "depends": [],
-      "claudePrompt": "Perform comprehensive EDA on ${dataset} for predicting ${target}. Analyze: 1) Data types and distributions, 2) Missing values and outliers, 3) Feature correlations, 4) Target variable characteristics, 5) Potential feature engineering opportunities. Provide actionable insights for ML pipeline design.",
-      "input": {
-        "dataset": "${dataset}",
-        "target": "${target}"
-      },
-      "output": {
-        "data_insights": "object",
-        "feature_recommendations": "array",
-        "preprocessing_requirements": "array"
-      }
-    },
-    {
-      "id": "initial-pipeline",
-      "name": "Build Initial ML Pipeline",
-      "type": "implementation",
-      "description": "Create baseline pipeline using search results",
-      "assignTo": "ml-engineer-1",
-      "depends": ["web-search", "data-analysis"],
-      "claudePrompt": "Build an initial ML pipeline incorporating the best approaches from web search. Use insights from data analysis to guide preprocessing and feature engineering. Create a modular pipeline with clear components: 1) Data preprocessing, 2) Feature engineering, 3) Model architecture, 4) Training strategy, 5) Evaluation metrics.",
-      "input": {
-        "search_results": "${web-search.output}",
-        "data_insights": "${data-analysis.output}",
-        "dataset": "${dataset}",
-        "target": "${target}"
-      },
-      "output": {
-        "pipeline_code": "string",
-        "baseline_score": "number",
-        "components": "object"
-      }
-    },
-    {
-      "id": "ablation-study",
-      "name": "Component Ablation Analysis",
-      "type": "analysis",
-      "description": "Identify critical pipeline components through ablation",
-      "assignTo": "ablation-analyst",
-      "depends": ["initial-pipeline"],
-      "iterative": true,
-      "maxIterations": "${refinement_iterations}",
-      "claudePrompt": "Conduct systematic ablation study on the ML pipeline. For each component (preprocessing, feature engineering, model, postprocessing): 1) Remove/disable the component, 2) Measure performance impact, 3) Identify the most critical component. Provide detailed analysis of which component has the highest impact on performance.",
-      "input": {
-        "pipeline": "${initial-pipeline.output.pipeline_code}",
-        "baseline_score": "${initial-pipeline.output.baseline_score}"
-      },
-      "output": {
-        "critical_component": "string",
-        "impact_scores": "object",
-        "ablation_results": "array"
-      }
-    },
-    {
-      "id": "targeted-refinement",
-      "name": "Focused Component Optimization",
-      "type": "optimization",
-      "description": "Deep refinement of identified critical component",
-      "assignTo": ["ml-engineer-1", "ml-engineer-2"],
-      "depends": ["ablation-study"],
-      "parallel": true,
-      "iterative": true,
-      "claudePrompt": "Focus on optimizing the ${ablation-study.output.critical_component} component. Generate 10+ variations: 1) Different implementation approaches, 2) Hyperparameter variations, 3) Alternative algorithms, 4) Novel techniques. Test each variation and track performance. Select the best performing variation.",
-      "input": {
-        "critical_component": "${ablation-study.output.critical_component}",
-        "current_pipeline": "${initial-pipeline.output.pipeline_code}",
-        "target_score": "${initial-pipeline.output.baseline_score}"
-      },
-      "output": {
-        "best_variation": "object",
-        "improved_pipeline": "string",
-        "new_score": "number",
-        "all_variations": "array"
-      }
-    },
-    {
-      "id": "ensemble-creation",
-      "name": "Advanced Ensemble Strategy",
-      "type": "ensemble",
-      "description": "Create sophisticated ensemble from best models",
-      "assignTo": "ensemble-architect",
-      "depends": ["targeted-refinement"],
-      "claudePrompt": "Design an advanced ensemble strategy using the top ${ensemble_size} model variations. Consider: 1) Model diversity and complementarity, 2) Weighted voting vs stacking vs blending, 3) Cross-validation for weight optimization, 4) Out-of-fold predictions. Implement the ensemble and optimize for maximum performance.",
-      "input": {
-        "candidate_models": "${targeted-refinement.output.all_variations}",
-        "ensemble_size": "${ensemble_size}",
-        "validation_data": "${dataset}"
-      },
-      "output": {
-        "ensemble_strategy": "object",
-        "ensemble_code": "string",
-        "ensemble_score": "number",
-        "model_weights": "array"
-      }
-    },
-    {
-      "id": "robustness-validation",
-      "name": "Robustness and Quality Checks",
-      "type": "validation",
-      "description": "Comprehensive validation and debugging",
-      "assignTo": "validator",
-      "depends": ["ensemble-creation"],
-      "parallel": true,
-      "claudePrompt": "Perform comprehensive robustness validation: 1) Check for data leakage in all pipeline stages, 2) Verify train/test separation integrity, 3) Debug any execution errors, 4) Validate reproducibility, 5) Check resource usage and optimization opportunities. Fix any issues found and ensure production readiness.",
-      "input": {
-        "final_pipeline": "${ensemble-creation.output.ensemble_code}",
-        "dataset": "${dataset}",
-        "all_components": "${initial-pipeline.output.components}"
-      },
-      "output": {
-        "validation_report": "object",
-        "issues_found": "array",
-        "fixes_applied": "array",
-        "production_ready": "boolean"
-      }
-    },
-    {
-      "id": "deployment-package",
-      "name": "Create Deployment Package",
-      "type": "deployment",
-      "description": "Package final solution for deployment",
-      "assignTo": "ml-engineer-1",
-      "depends": ["robustness-validation"],
-      "claudePrompt": "Create a production-ready deployment package: 1) Clean and optimize code, 2) Create requirements.txt, 3) Add comprehensive documentation, 4) Include model serialization, 5) Create inference API, 6) Add monitoring hooks. Package everything in ${output_dir}.",
-      "input": {
-        "validated_pipeline": "${robustness-validation.output}",
-        "output_dir": "${output_dir}"
-      },
-      "output": {
-        "deployment_path": "string",
-        "api_endpoint": "string",
-        "documentation": "string",
-        "performance_metrics": "object"
-      }
-    }
-  ],
-  "hooks": {
-    "pre-task": "npx claude-flow@alpha hooks pre-task --description \"${task.name}\" --auto-spawn-agents false",
-    "post-task": "npx claude-flow@alpha hooks post-task --task-id \"${task.id}\" --analyze-performance true",
-    "on-error": "npx claude-flow@alpha hooks notify --message \"Error in ${task.id}: ${error.message}\" --telemetry true"
+    "datasetPath": "${DATASET_PATH}",
+    "targetColumn": "${TARGET_COLUMN}",
+    "outputDirectory": "/mle-star-output",
+    "searchIterations": 3,
+    "refinementIterations": 5,
+    "ensembleSize": 5,
+    "validationSplitRatio": 0.2,
+    "randomSeed": 42
   },
   "settings": {
     "maxConcurrency": 4,
-    "timeout": 3600000,
+    "timeout": "1h",
     "retryPolicy": "exponential",
-    "failurePolicy": "continue",
-    "memoryCoordination": true,
-    "progressTracking": "detailed",
-    "outputFormat": "stream-json"
+    "maxRetries": 3,
+    "logLevel": "info"
+  },
+  "tasks": [
+    {"id": "task-1-1", "type": "research", "description": "Web Search & SOTA Research", "assignTo": "ml-researcher-agent"},
+    {"id": "task-1-2", "type": "analysis", "description": "Data Analysis & EDA", "assignTo": "data-analyst-agent"},
+    {"id": "task-2-1", "type": "development", "description": "Initial Pipeline & Baseline Models", "assignTo": "ml-developer-alpha", "depends": ["task-1-1", "task-1-2"]},
+    {"id": "task-3-1", "type": "analysis", "description": "Ablation Studies", "assignTo": "ablation-analyst-agent", "depends": ["task-2-1"]},
+    {"id": "task-3-2", "type": "optimization", "description": "Targeted Refinement", "assignTo": "ml-developer-beta", "depends": ["task-3-1"]},
+    {"id": "task-4-1", "type": "ensemble", "description": "Ensemble Creation", "assignTo": "ensemble-architect-agent", "depends": ["task-3-2"]},
+    {"id": "task-4-2", "type": "validation", "description": "Robustness Validation", "assignTo": "validator-agent", "depends": ["task-3-2"]},
+    {"id": "task-5-1", "type": "deployment", "description": "Deployment Package Creation", "assignTo": "ml-developer-alpha", "depends": ["task-4-1", "task-4-2"]}
+  ],
+  "agents": [
+    {
+      "id": "supervisor-coordinator",
+      "name": "Supervisor Coordinator",
+      "type": "coordinator",
+      "subtype": "hierarchical-coordinator",
+      "color": "#FF6B6B",
+      "description": "Orchestrates the entire MLE-STAR workflow and supervises all specialized agents",
+      "capabilities": [
+        "workflow-orchestration",
+        "task-scheduling",
+        "agent-supervision",
+        "dependency-management",
+        "progress-monitoring"
+      ],
+      "priority": "critical",
+      "hooks": {
+        "pre": "echo 'Initializing MLE-STAR Workflow Supervisor'",
+        "post": "echo 'Workflow execution complete'"
+      }
+    },
+    {
+      "id": "ml-researcher-agent",
+      "name": "ML Researcher Agent",
+      "type": "analyzer",
+      "subtype": "ml-researcher",
+      "color": "#4ECDC4",
+      "description": "Researches state-of-the-art ML approaches and winning solutions from academic sources",
+      "capabilities": [
+        "model-search",
+        "paper-analysis",
+        "kaggle-solutions-research",
+        "sota-benchmarking",
+        "literature-review"
+      ],
+      "priority": "critical",
+      "hooks": {
+        "pre": "echo 'Starting ML research phase'",
+        "post": "echo 'ML research phase completed'"
+      }
+    },
+    {
+      "id": "data-analyst-agent",
+      "name": "Data Analyst Agent",
+      "type": "analyzer",
+      "subtype": "code-analyzer",
+      "color": "#45B7D1",
+      "description": "Performs comprehensive exploratory data analysis and identifies key features",
+      "capabilities": [
+        "exploratory-data-analysis",
+        "feature-analysis",
+        "data-quality-assessment",
+        "missing-value-handling",
+        "data-distribution-analysis"
+      ],
+      "priority": "high",
+      "hooks": {
+        "pre": "echo 'Initiating data analysis'",
+        "post": "echo 'Data analysis complete'"
+      }
+    },
+    {
+      "id": "ml-developer-alpha",
+      "name": "ML Developer Alpha",
+      "type": "developer",
+      "subtype": "ml-developer",
+      "color": "#96CEB4",
+      "description": "Implements baseline ML models and feature engineering strategies",
+      "capabilities": [
+        "model-implementation",
+        "feature-engineering",
+        "baseline-creation",
+        "python-coding",
+        "sklearn-implementation"
+      ],
+      "priority": "critical",
+      "hooks": {
+        "pre": "echo 'ML Developer Alpha starting baseline implementation'",
+        "post": "echo 'Baseline models implemented'"
+      }
+    },
+    {
+      "id": "ml-developer-beta",
+      "name": "ML Developer Beta",
+      "type": "developer",
+      "subtype": "ml-developer",
+      "color": "#FFEAA7",
+      "description": "Specializes in ensemble methods and hyperparameter optimization",
+      "capabilities": [
+        "ensemble-methods",
+        "hyperparameter-tuning",
+        "advanced-feature-engineering",
+        "model-optimization",
+        "cross-validation"
+      ],
+      "priority": "high",
+      "hooks": {
+        "pre": "echo 'ML Developer Beta starting optimization'",
+        "post": "echo 'Optimization phase completed'"
+      }
+    },
+    {
+      "id": "ablation-analyst-agent",
+      "name": "Ablation Analyst Agent",
+      "type": "analyzer",
+      "subtype": "ablation-analyst",
+      "color": "#DDA15E",
+      "description": "Systematically tests components to identify high-impact elements",
+      "capabilities": [
+        "ablation-studies",
+        "component-testing",
+        "impact-measurement",
+        "performance-analysis",
+        "feature-importance-analysis"
+      ],
+      "priority": "high",
+      "hooks": {
+        "pre": "echo 'Starting ablation study phase'",
+        "post": "echo 'Ablation studies completed'"
+      }
+    },
+    {
+      "id": "ensemble-architect-agent",
+      "name": "Ensemble Architect Agent",
+      "type": "developer",
+      "subtype": "ensemble-architect",
+      "color": "#BC6C25",
+      "description": "Creates sophisticated model combinations using stacking and weighting strategies",
+      "capabilities": [
+        "ensemble-design",
+        "model-stacking",
+        "dynamic-weighting",
+        "bayesian-averaging",
+        "mixture-of-experts"
+      ],
+      "priority": "high",
+      "hooks": {
+        "pre": "echo 'Ensemble architect designing model combinations'",
+        "post": "echo 'Ensemble models created'"
+      }
+    },
+    {
+      "id": "validator-agent",
+      "name": "Robustness Validator Agent",
+      "type": "tester",
+      "subtype": "production-validator",
+      "color": "#8B5A3C",
+      "description": "Performs comprehensive validation with data leakage detection and production readiness checks",
+      "capabilities": [
+        "data-leakage-detection",
+        "cross-validation",
+        "production-readiness-testing",
+        "model-debugging",
+        "performance-validation"
+      ],
+      "priority": "critical",
+      "hooks": {
+        "pre": "echo 'Starting validation phase'",
+        "post": "echo 'Validation completed'"
+      }
+    }
+  ],
+  "phases": [
+    {
+      "phaseId": 1,
+      "phaseName": "Discovery & Foundation",
+      "description": "Web search and baseline model creation",
+      "executionMode": "parallel",
+      "tasks": [
+        {
+          "taskId": "task-1-1",
+          "taskName": "Web Search & SOTA Research",
+          "assignedAgent": "ml-researcher-agent",
+          "inputs": {
+            "topic": "state-of-the-art models for ${TARGET_COLUMN} prediction",
+            "sources": ["academic-papers", "kaggle-competitions", "github-repos"],
+            "iterations": "${searchIterations}"
+          },
+          "outputs": {
+            "researchReport": "${OUTPUT_DIR}/phase1-research-report.md",
+            "modelCandidates": "${OUTPUT_DIR}/phase1-model-candidates.json"
+          },
+          "timeout": "30m"
+        },
+        {
+          "taskId": "task-1-2",
+          "taskName": "Data Analysis & EDA",
+          "assignedAgent": "data-analyst-agent",
+          "inputs": {
+            "dataset": "${datasetPath}",
+            "targetColumn": "${targetColumn}",
+            "analysisDepth": "comprehensive"
+          },
+          "outputs": {
+            "edaReport": "${OUTPUT_DIR}/phase1-eda-report.md",
+            "featureAnalysis": "${OUTPUT_DIR}/phase1-feature-analysis.json",
+            "dataQualityMetrics": "${OUTPUT_DIR}/phase1-data-quality.json"
+          },
+          "timeout": "20m"
+        }
+      ]
+    },
+    {
+      "phaseId": 2,
+      "phaseName": "Baseline Implementation",
+      "description": "Create initial ML pipeline with baseline models",
+      "executionMode": "sequential",
+      "tasks": [
+        {
+          "taskId": "task-2-1",
+          "taskName": "Initial Pipeline & Baseline Models",
+          "assignedAgent": "ml-developer-alpha",
+          "dependencies": ["task-1-1", "task-1-2"],
+          "inputs": {
+            "dataset": "${datasetPath}",
+            "targetColumn": "${targetColumn}",
+            "researchFindings": "${OUTPUT_DIR}/phase1-research-report.md",
+            "featureAnalysis": "${OUTPUT_DIR}/phase1-feature-analysis.json",
+            "models": ["logistic-regression", "random-forest", "gradient-boosting"]
+          },
+          "outputs": {
+            "baselineModels": "${OUTPUT_DIR}/phase2-baseline-models.pkl",
+            "featureEngineering": "${OUTPUT_DIR}/phase2-feature-engineering.py",
+            "baselineMetrics": "${OUTPUT_DIR}/phase2-baseline-metrics.json"
+          },
+          "timeout": "45m"
+        }
+      ]
+    },
+    {
+      "phaseId": 3,
+      "phaseName": "Analysis & Refinement",
+      "description": "Ablation studies and targeted optimization",
+      "executionMode": "sequential",
+      "tasks": [
+        {
+          "taskId": "task-3-1",
+          "taskName": "Ablation Studies (Iterative)",
+          "assignedAgent": "ablation-analyst-agent",
+          "dependencies": ["task-2-1"],
+          "inputs": {
+            "models": "${OUTPUT_DIR}/phase2-baseline-models.pkl",
+            "features": "${OUTPUT_DIR}/phase2-feature-engineering.py",
+            "iterations": "${refinementIterations}",
+            "dataset": "${datasetPath}"
+          },
+          "outputs": {
+            "ablationResults": "${OUTPUT_DIR}/phase3-ablation-results.json",
+            "impactAnalysis": "${OUTPUT_DIR}/phase3-impact-analysis.md",
+            "criticalComponents": "${OUTPUT_DIR}/phase3-critical-components.json"
+          },
+          "timeout": "60m"
+        },
+        {
+          "taskId": "task-3-2",
+          "taskName": "Targeted Refinement",
+          "assignedAgent": "ml-developer-beta",
+          "dependencies": ["task-3-1"],
+          "inputs": {
+            "criticalComponents": "${OUTPUT_DIR}/phase3-critical-components.json",
+            "models": "${OUTPUT_DIR}/phase2-baseline-models.pkl",
+            "dataset": "${datasetPath}",
+            "iterations": "${refinementIterations}"
+          },
+          "outputs": {
+            "refinedModels": "${OUTPUT_DIR}/phase3-refined-models.pkl",
+            "optimizationLog": "${OUTPUT_DIR}/phase3-optimization-log.json",
+            "improvedMetrics": "${OUTPUT_DIR}/phase3-improved-metrics.json"
+          },
+          "timeout": "60m"
+        }
+      ]
+    },
+    {
+      "phaseId": 4,
+      "phaseName": "Ensemble & Validation",
+      "description": "Create ensembles and perform comprehensive validation",
+      "executionMode": "parallel",
+      "tasks": [
+        {
+          "taskId": "task-4-1",
+          "taskName": "Ensemble Creation",
+          "assignedAgent": "ensemble-architect-agent",
+          "dependencies": ["task-3-2"],
+          "inputs": {
+            "refinedModels": "${OUTPUT_DIR}/phase3-refined-models.pkl",
+            "ensembleSize": "${ensembleSize}",
+            "ensembleMethods": ["stacking", "dynamic-weighting", "bayesian-averaging"]
+          },
+          "outputs": {
+            "ensembleModels": "${OUTPUT_DIR}/phase4-ensemble-models.pkl",
+            "ensembleConfig": "${OUTPUT_DIR}/phase4-ensemble-config.json",
+            "ensembleMetrics": "${OUTPUT_DIR}/phase4-ensemble-metrics.json"
+          },
+          "timeout": "40m"
+        },
+        {
+          "taskId": "task-4-2",
+          "taskName": "Robustness Validation",
+          "assignedAgent": "validator-agent",
+          "dependencies": ["task-3-2"],
+          "inputs": {
+            "models": "${OUTPUT_DIR}/phase3-refined-models.pkl",
+            "dataset": "${datasetPath}",
+            "validationSplitRatio": "${validationSplitRatio}",
+            "checks": ["data-leakage", "cross-validation", "edge-cases"]
+          },
+          "outputs": {
+            "validationReport": "${OUTPUT_DIR}/phase4-validation-report.md",
+            "leakageAnalysis": "${OUTPUT_DIR}/phase4-leakage-analysis.json",
+            "validationMetrics": "${OUTPUT_DIR}/phase4-validation-metrics.json"
+          },
+          "timeout": "40m"
+        }
+      ]
+    },
+    {
+      "phaseId": 5,
+      "phaseName": "Production Deployment",
+      "description": "Package models for deployment and create API",
+      "executionMode": "sequential",
+      "tasks": [
+        {
+          "taskId": "task-5-1",
+          "taskName": "Deployment Package Creation",
+          "assignedAgent": "ml-developer-alpha",
+          "dependencies": ["task-4-1", "task-4-2"],
+          "inputs": {
+            "ensembleModels": "${OUTPUT_DIR}/phase4-ensemble-models.pkl",
+            "featureEngineering": "${OUTPUT_DIR}/phase2-feature-engineering.py",
+            "ensembleConfig": "${OUTPUT_DIR}/phase4-ensemble-config.json",
+            "validationReport": "${OUTPUT_DIR}/phase4-validation-report.md"
+          },
+          "outputs": {
+            "deploymentPackage": "${OUTPUT_DIR}/mle-star-deployment-package.zip",
+            "apiSpec": "${OUTPUT_DIR}/api-specification.yaml",
+            "deploymentGuide": "${OUTPUT_DIR}/deployment-guide.md",
+            "finalReport": "${OUTPUT_DIR}/mle-star-final-report.md"
+          },
+          "timeout": "30m"
+        }
+      ]
+    }
+  ],
+  "coordinationTopology": {
+    "type": "hierarchical",
+    "supervisor": "supervisor-coordinator",
+    "hierarchyLevels": [
+      {
+        "level": 1,
+        "role": "Supervisor",
+        "agents": ["supervisor-coordinator"]
+      },
+      {
+        "level": 2,
+        "role": "Phase Leads",
+        "agents": ["ml-researcher-agent", "data-analyst-agent", "ml-developer-alpha", "ml-developer-beta"]
+      },
+      {
+        "level": 3,
+        "role": "Specialists",
+        "agents": ["ablation-analyst-agent", "ensemble-architect-agent", "validator-agent"]
+      }
+    ]
+  },
+  "successCriteria": {
+    "phaseCompletion": "All tasks must complete successfully",
+    "modelPerformance": "Minimum 10% improvement over baseline",
+    "validationPass": "No data leakage detected, all validation checks passed",
+    "deploymentReady": "Deployment package created with complete documentation"
+  },
+  "expectedOutcomes": {
+    "performanceImprovement": "14% average performance gain",
+    "executionTime": "2-4 hours for typical dataset",
+    "deliverables": [
+      "Research report with SOTA findings",
+      "EDA and feature analysis",
+      "Baseline models and metrics",
+      "Ablation study results",
+      "Optimized models",
+      "Ensemble models with configurations",
+      "Validation and deployment reports",
+      "Production-ready deployment package"
+    ]
   }
 }

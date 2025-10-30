@@ -9,10 +9,13 @@ This project will going to use the paper written by google cloud team to practic
 
 ## 1️⃣ Langgraph + Ollama in Multi-Agent System
 ### 📚 Reference
-* [Paer Reading - Google Cloud - MLE-STAR: Machine Learning Engineering Agent via Search and Targeted Refinement](https://arxiv.org/abs/2506.15692v3) 
-* [Github Ruvnet/Claude-Flow](https://github.com/ruvnet/claude-flow)
-* [Github Claude-Flow Agent System Overview](https://github.com/ruvnet/claude-flow/wiki/Agent-System-Overview)
-* [Web Search example - Langgraph with Ollama](https://github.com/john-adeojo/graph_websearch_agent)
+* Paer Reading
+    * [Google Cloud - MLE-STAR: Machine Learning Engineering Agent via Search and Targeted Refinement](https://arxiv.org/abs/2506.15692v3) 
+* Claude-Flow
+    * [Github Repo](https://github.com/ruvnet/claude-flow)
+    * [Wiki to understand the detail concepts)](https://github.com/ruvnet/claude-flow/wiki/Agent-System-Overview)
+* Code Examples
+    * [Web Search example - Langgraph with Ollama](https://github.com/john-adeojo/graph_websearch_agent)
 
 ### 📁 Practice Dataset
 * [Rossmann Store Sales Prediction](https://www.kaggle.com/competitions/rossmann-store-sales/)
@@ -55,7 +58,29 @@ Due to the resource limitation, so choose duckduckgo search engine as web search
 
 ## 2️⃣ Claude-Flow Service in Sales Prediction Workflow
 
-> contents
+### Basic Information
+1. Branch Name：**claude-flow/dev_main**
+2. Repo Architecture
+```plaintext
+/Users/yuchen/Google-MLE-Agent/
+├── data/                                   ⭐ Rossmann Sales Predictioin Dataset
+│   ├── data_cleaning.ipynb.                ⭐ Analyze Raw Dataset Myself
+│   ├── train.csv                           
+│   ├── test.csv
+│   ├── store.csv
+│   └── sample_submission.csv
+├── images/                                 ⭐ All necessary images
+├── mle-star-output/                        ⭐ All outputs from mle-star workflow
+├── src/
+│   └── cli/
+│       └── simple-commands/
+│           └── templates/
+│               └── mle-star-workflow.json  ⭐ Template to interact with claude-flow by CLI
+├── call_claude_flow_tool.py                ⭐ Python interface
+├── requirements.txt                        ⭐ Python dependencies
+├── README.md                               ⭐ Documentation
+└── finally_fix_the_issue.md                ⭐ This guide
+```
 
 ### Some Issues
 1. In Claude-flow github repo doesn't mention MLE-STAR, but the wiki page does. This suggests MLE-STAR might be an experimental or incomplete feature. Let me verify the wiki page exists and check if there's a specific alpha version.
@@ -69,4 +94,5 @@ Due to the resource limitation, so choose duckduckgo search engine as web search
 
     # Or directly with claude-flow CLI
     claude-flow automation mle-star --dataset data/train.csv --target Sales --claude --name "my-experiment"
-```
+    ```
+2. Run `claude-flow automation mle-star --dataset data/train.csv --target Sales --name "test" --claude` without local llm with cost usage in personal account.

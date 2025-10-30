@@ -1,0 +1,408 @@
+{
+  "metadata": {
+    "agent": "ml-researcher-agent",
+    "session_id": "automation-session-1761787382730-lh8itu8j1",
+    "execution_id": "workflow-exec-1761787382730-wxe1ack0x",
+    "date": "2025-10-30",
+    "problem_type": "retail_sales_forecasting",
+    "target_variable": "Sales",
+    "dataset": "Rossmann Store Sales"
+  },
+  "baseline_models": [
+    {
+      "model_id": "baseline_1",
+      "name": "LightGBM Localized Per-Store",
+      "algorithm": "LightGBM",
+      "priority": "critical",
+      "strategy": "localized",
+      "rationale": "Fastest training (20x vs neural nets), superior accuracy on tabular data, excellent for individual store-level modeling",
+      "configuration": {
+        "modeling_approach": "individual_models_per_store",
+        "boosting_type": "gbdt",
+        "objective": "regression",
+        "metric": "rmse",
+        "num_leaves": 31,
+        "learning_rate": 0.05,
+        "feature_fraction": 0.8,
+        "bagging_fraction": 0.8,
+        "bagging_freq": 5,
+        "max_depth": -1,
+        "min_data_in_leaf": 20,
+        "categorical_features": ["Store", "DayOfWeek", "StoreType", "Assortment"]
+      },
+      "expected_performance": {
+        "rmspe": "0.10-0.12",
+        "training_time_hours": "0.5-1.0",
+        "inference_time_ms": "<10"
+      },
+      "advantages": [
+        "20x faster training than deep learning",
+        "Native categorical feature support",
+        "Low memory footprint",
+        "Proven superior accuracy in 2025 research"
+      ],
+      "implementation_notes": "Train separate model for each store or store cluster. Handle missing values by keeping as sparse. Use recent research finding: non-imputed localized models outperform imputed."
+    },
+    {
+      "model_id": "baseline_2",
+      "name": "XGBoost Global with Store Features",
+      "algorithm": "XGBoost",
+      "priority": "critical",
+      "strategy": "global",
+      "rationale": "Kaggle 1st place winner used 20+ XGBoost models. Proven R²=0.87 in retail applications. Extensive hyperparameter options.",
+      "configuration": {
+        "modeling_approach": "single_global_model",
+        "objective": "reg:squarederror",
+        "eval_metric": "rmse",
+        "max_depth": 8,
+        "learning_rate": 0.05,
+        "n_estimators": 1000,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "min_child_weight": 5,
+        "gamma": 0.1,
+        "reg_alpha": 0.1,
+        "reg_lambda": 1.0,
+        "early_stopping_rounds": 50
+      },
+      "expected_performance": {
+        "rmspe": "0.11-0.13",
+        "training_time_hours": "1.0-2.0",
+        "inference_time_ms": "<15"
+      },
+      "advantages": [
+        "Kaggle competition proven (1st place)",
+        "Wide hyperparameter optimization options",
+        "Strong with engineered features",
+        "Excellent missing value handling"
+      ],
+      "implementation_notes": "Encode stores as features or use embeddings. Follow 1st place approach: 50% time on feature engineering, 40% on feature selection + ensembling."
+    },
+    {
+      "model_id": "baseline_3",
+      "name": "Random Forest + Linear Regression Ensemble",
+      "algorithm": "Ensemble (RF + Linear)",
+      "priority": "high",
+      "strategy": "ensemble",
+      "rationale": "Fast interpretable baseline. Random Forest for feature importance analysis, Linear for speed and interpretability.",
+      "configuration": {
+        "random_forest": {
+          "n_estimators": 100,
+          "max_depth": 15,
+          "min_samples_split": 10,
+          "min_samples_leaf": 5,
+          "max_features": "sqrt",
+          "n_jobs": -1
+        },
+        "linear_regression": {
+          "fit_intercept": true,
+          "normalize": false
+        },
+        "ensemble_method": "weighted_average",
+        "weights": {
+          "random_forest": 0.6,
+          "linear_regression": 0.4
+        }
+      },
+      "expected_performance": {
+        "rmspe": "0.13-0.15",
+        "training_time_hours": "0.3-0.5",
+        "inference_time_ms": "<20"
+      },
+      "advantages": [
+        "Very fast training (<30 minutes)",
+        "Highly interpretable",
+        "Good for feature importance analysis",
+        "Robust baseline benchmark"
+      ],
+      "implementation_notes": "Use RF feature importance to guide feature engineering. Linear model provides interpretability for business stakeholders."
+    }
+  ],
+  "refinement_candidates": [
+    {
+      "model_id": "refinement_1",
+      "name": "LightGBM with Optimized Features",
+      "algorithm": "LightGBM",
+      "parent_model": "baseline_1",
+      "priority": "critical",
+      "refinement_strategy": "Use ablation study results to select top features. Optimize hyperparameters on critical features only.",
+      "hyperparameters_to_tune": [
+        "num_leaves (range: 20-50)",
+        "learning_rate (range: 0.01-0.1)",
+        "max_depth (range: 5-15)",
+        "min_data_in_leaf (range: 10-50)",
+        "feature_fraction (range: 0.6-0.95)",
+        "bagging_fraction (range: 0.6-0.95)"
+      ],
+      "tuning_method": "Bayesian Optimization or Grid Search",
+      "expected_improvement": "5-10% RMSPE reduction over baseline"
+    },
+    {
+      "model_id": "refinement_2",
+      "name": "XGBoost Ensemble (Multiple Configurations)",
+      "algorithm": "XGBoost",
+      "parent_model": "baseline_2",
+      "priority": "high",
+      "refinement_strategy": "Following 1st place Kaggle winner: Create 20+ XGBoost models with diverse configurations. Each should achieve competitive score individually.",
+      "diversity_strategies": [
+        "Different max_depth (6, 8, 10, 12)",
+        "Different learning_rate (0.01, 0.03, 0.05, 0.1)",
+        "Different subsample ratios (0.6, 0.7, 0.8, 0.9)",
+        "Different regularization (alpha: 0, 0.1, 1.0; lambda: 0.5, 1.0, 2.0)",
+        "Different random seeds (42, 123, 456, 789, 999)",
+        "Different objective functions (if applicable)"
+      ],
+      "ensemble_method": "Weighted average based on validation performance",
+      "expected_improvement": "10-15% RMSPE reduction with full ensemble"
+    },
+    {
+      "model_id": "refinement_3",
+      "name": "Entity Embeddings Neural Network",
+      "algorithm": "Neural Network with Entity Embeddings",
+      "parent_model": "novel_approach",
+      "priority": "medium",
+      "condition": "Use if ablation studies show high-cardinality categorical features (Store, StoreType) have high impact",
+      "rationale": "3rd place Kaggle solution. Maps categorical variables to continuous embedding space. Discovers latent relationships.",
+      "architecture": {
+        "embedding_layers": [
+          {
+            "feature": "Store",
+            "cardinality": 1115,
+            "embedding_dim": 50
+          },
+          {
+            "feature": "DayOfWeek",
+            "cardinality": 7,
+            "embedding_dim": 4
+          },
+          {
+            "feature": "StoreType",
+            "cardinality": 4,
+            "embedding_dim": 2
+          },
+          {
+            "feature": "Assortment",
+            "cardinality": 3,
+            "embedding_dim": 2
+          }
+        ],
+        "dense_layers": [
+          {"units": 1000, "activation": "relu", "dropout": 0.3},
+          {"units": 500, "activation": "relu", "dropout": 0.2},
+          {"units": 100, "activation": "relu", "dropout": 0.2},
+          {"units": 1, "activation": "linear"}
+        ],
+        "optimizer": "adam",
+        "loss": "mse",
+        "batch_size": 128,
+        "epochs": 50,
+        "early_stopping_patience": 10
+      },
+      "expected_improvement": "Competitive with tree-based methods; provides embedding insights",
+      "advantages": [
+        "Discovers hidden relationships between categories",
+        "Better generalization on sparse data",
+        "Embedding visualizations provide business insights",
+        "Handles high-cardinality features efficiently"
+      ]
+    },
+    {
+      "model_id": "refinement_4",
+      "name": "Temporal Fusion Transformer (Optional)",
+      "algorithm": "Transformer (TFT)",
+      "parent_model": "novel_approach",
+      "priority": "low",
+      "condition": "Only if dataset size >100k samples and computational resources available",
+      "rationale": "2025 SOTA for time series. Scaling laws: accuracy improves with data volume. May underperform tree-based on smaller datasets.",
+      "configuration": {
+        "hidden_size": 160,
+        "num_attention_heads": 4,
+        "dropout": 0.1,
+        "hidden_continuous_size": 8,
+        "attention_head_size": 4,
+        "max_encoder_length": 60,
+        "max_prediction_length": 42,
+        "learning_rate": 0.001
+      },
+      "expected_performance": "Potentially competitive if data volume sufficient; likely slower than tree-based",
+      "implementation_notes": "Use only if tree-based models plateau. Requires substantial computational resources (GPU recommended)."
+    }
+  ],
+  "ensemble_architecture": {
+    "ensemble_id": "final_ensemble",
+    "name": "Stacked Ensemble with Bayesian Averaging",
+    "priority": "critical",
+    "strategy": "Following Kaggle winners: Combine multiple strong individual models",
+    "level_1_base_models": [
+      {
+        "model": "LightGBM Localized (3 variants)",
+        "variants": "Different hyperparameters (learning_rate, num_leaves, max_depth)",
+        "count": 3
+      },
+      {
+        "model": "XGBoost Global (2 variants)",
+        "variants": "Different regularization and tree depth",
+        "count": 2
+      },
+      {
+        "model": "Random Forest",
+        "count": 1
+      },
+      {
+        "model": "Entity Embeddings NN (optional)",
+        "condition": "Include if performance competitive",
+        "count": 1
+      }
+    ],
+    "level_2_meta_model_options": [
+      {
+        "approach": "Linear Regression on Level 1 predictions",
+        "rationale": "Simple, fast, interpretable",
+        "priority": "recommended"
+      },
+      {
+        "approach": "XGBoost on Level 1 predictions",
+        "rationale": "Can learn non-linear combinations",
+        "priority": "alternative"
+      },
+      {
+        "approach": "Weighted Average with Bayesian Optimization",
+        "rationale": "Following 1st place winner approach",
+        "priority": "recommended"
+      }
+    ],
+    "validation_strategy": "Out-of-fold predictions for Level 2 training to prevent overfitting",
+    "expected_performance": {
+      "rmspe": "0.095-0.105",
+      "target_leaderboard_position": "Top 5%",
+      "training_time_hours": "3-5 (with parallelization)"
+    }
+  },
+  "feature_engineering_priorities": {
+    "high_priority_features": [
+      {
+        "category": "Temporal Features",
+        "features": [
+          "DayOfWeek (cyclical encoding: sin/cos)",
+          "Month, Quarter, Year",
+          "Weekend/Weekday indicator",
+          "Days to/from month end",
+          "Week of year",
+          "IsHoliday (StateHoliday, SchoolHoliday combined)"
+        ],
+        "rationale": "Strong weekly and seasonal patterns in retail sales"
+      },
+      {
+        "category": "Lag Features",
+        "features": [
+          "Sales lag 1, 7, 14, 21, 28 days",
+          "Same day of week from previous 1-4 weeks",
+          "Rolling mean/std/median (7/14/28/90 day windows)",
+          "Rolling quantiles (25th, 75th percentiles)",
+          "Exponential moving averages (alpha: 0.1, 0.3, 0.5)"
+        ],
+        "rationale": "Historical patterns strong predictor. Winners spent 50% time on feature engineering."
+      },
+      {
+        "category": "Promotion Features",
+        "features": [
+          "Promo indicator",
+          "Promo2 participation",
+          "Days in/out of promotion",
+          "Promotion frequency (last 30/60/90 days)",
+          "Promo × DayOfWeek interaction"
+        ],
+        "rationale": "Promotions significantly impact sales patterns"
+      },
+      {
+        "category": "Store Features",
+        "features": [
+          "Store type (categorical or embedded)",
+          "Assortment type",
+          "Competition distance",
+          "Competition age (months since opening)",
+          "Store age",
+          "Historical store performance (mean, std sales)"
+        ],
+        "rationale": "Store characteristics drive baseline sales levels"
+      }
+    ],
+    "medium_priority_features": [
+      {
+        "category": "Derived Features",
+        "features": [
+          "Customers per sale ratio",
+          "Sales per customer",
+          "Store performance vs peer group",
+          "Promotion effectiveness (sales lift during promo)",
+          "Holiday effects by store type"
+        ]
+      }
+    ],
+    "feature_engineering_time_allocation": "50% of total effort (following 1st place winner strategy)"
+  },
+  "validation_strategy": {
+    "primary_metric": "RMSPE (Root Mean Square Percentage Error)",
+    "secondary_metrics": ["MAPE", "MAE", "RMSE", "R²"],
+    "validation_approach": {
+      "method": "Time-Series Split",
+      "description": "Train on historical data, validate on subsequent 6 weeks",
+      "num_splits": 3,
+      "test_size_weeks": 6
+    },
+    "cross_validation": {
+      "method": "Time-Series K-Fold with Forward Chaining",
+      "num_folds": 5,
+      "respect_temporal_order": true,
+      "no_future_leakage": true
+    },
+    "holdout_test": {
+      "size": "Final 6 weeks",
+      "usage": "Never used during training/tuning. Only for production validation."
+    }
+  },
+  "data_preprocessing_strategy": {
+    "missing_values": {
+      "competition_data": "Impute with large value (no competition) OR create 'missing' category",
+      "promo2_data": "Missing = not participating",
+      "store_metadata": "Impute based on similar stores",
+      "recommendation": "Follow 2025 research: Non-imputed localized models may outperform imputed"
+    },
+    "outliers": {
+      "detection": "IQR method, domain rules (store closures), statistical methods",
+      "handling": "Investigate before removing. May be legitimate patterns (special events).",
+      "approach": "Robust scaling, separate modeling for outlier periods"
+    },
+    "data_cleaning": [
+      "Remove closed store days (Sales=0, Open=0)",
+      "Handle store renovations/closures",
+      "Validate date continuity",
+      "Check for data leakage (no future information in features)"
+    ]
+  },
+  "success_criteria": {
+    "baseline_target": "RMSPE < 0.13 (Top 20-30% Kaggle leaderboard)",
+    "refinement_target": "RMSPE < 0.11 (Top 10% performance)",
+    "ensemble_target": "RMSPE < 0.10 (Top 5% potential)",
+    "training_time_target": "Total <4 hours (with parallelization)",
+    "no_data_leakage": "Comprehensive validation checks",
+    "production_ready": "Fast inference (<20ms per prediction)"
+  },
+  "key_insights_from_research": [
+    "Feature engineering > model complexity (50% time allocation per 1st place winner)",
+    "Localized per-store modeling outperforms global models (2025 research)",
+    "Tree-based models (LightGBM/XGBoost) consistently beat neural nets on tabular data",
+    "LightGBM: 20x faster training, superior accuracy on localized data",
+    "Ensemble diversity matters: 20+ XGBoost models (1st place) or 15 models (2nd place)",
+    "Entity embeddings effective for high-cardinality categoricals (3rd place innovation)",
+    "Non-imputed localized models > imputed models (recent finding)",
+    "Transformers require large datasets; may underperform tree-based on smaller data"
+  ],
+  "references": [
+    "Gert Jacobusse (1st place): 20+ XGBoost ensemble, 50% time on feature engineering",
+    "Nima Shahbazi (2nd place): 15-model ensemble, innovative feature discovery",
+    "Cheng Guo (3rd place): Entity Embeddings, arXiv:1604.06737",
+    "2025 Research: arXiv:2506.05941 - LightGBM superiority on retail forecasting",
+    "Transformer scaling laws: Forecasting accuracy improves with data volume (e-commerce)"
+  ]
+}

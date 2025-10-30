@@ -291,18 +291,18 @@ The following keys are available in ReasoningBank for other agents:
 7. Store baseline results in memory for refinement agent
 
 **Key Files:**
-- EDA Analysis: `mle-star-output/data-analyst-agent_analysis.json`
-- EDA Report: `mle-star-output/data-analyst-agent_eda_report.md`
-- ML Research: `mle-star-output/ml-researcher-agent_phase1-research-report.md`
-- Model Candidates: `mle-star-output/ml-researcher-agent_phase1-model-candidates.json`
-- This Handoff: `mle-star-output/data-analyst-agent_handoff-summary.md`
+- EDA Analysis: `./models/data-analyst-agent_analysis.json`
+- EDA Report: `./models/data-analyst-agent_eda_report.md`
+- ML Research: `./models/ml-researcher-agent_phase1-research-report.md`
+- Model Candidates: `./models/ml-researcher-agent_phase1-model-candidates.json`
+- This Handoff: `./models/data-analyst-agent_handoff-summary.md`
 
 **Expected Output Files:**
-- `mle-star-output/ml-foundation-agent_preprocessing-pipeline.py`
-- `mle-star-output/ml-foundation-agent_feature-engineering.py`
-- `mle-star-output/ml-foundation-agent_baseline-models.py`
-- `mle-star-output/ml-foundation-agent_baseline-results.json`
-- `mle-star-output/ml-foundation-agent_performance-report.md`
+- `./models/ml-foundation-agent_preprocessing-pipeline.py`
+- `./models/ml-foundation-agent_feature-engineering.py`
+- `./models/ml-foundation-agent_baseline-models.py`
+- `./models/ml-foundation-agent_baseline-results.json`
+- `./models/ml-foundation-agent_performance-report.md`
 
 ---
 

@@ -70,7 +70,7 @@ Due to the resource limitation, so choose duckduckgo search engine as web search
 │   ├── store.csv
 │   └── sample_submission.csv
 ├── images/                                 ⭐ All necessary images
-├── mle-star-output/                        ⭐ All outputs from mle-star workflow
+├── ./models/                        ⭐ All outputs from mle-star workflow
 ├── src/
 │   └── cli/
 │       └── simple-commands/
@@ -82,17 +82,20 @@ Due to the resource limitation, so choose duckduckgo search engine as web search
 └── finally_fix_the_issue.md                ⭐ This guide
 ```
 
-### Some Issues
-1. In Claude-flow github repo doesn't mention MLE-STAR, but the wiki page does. This suggests MLE-STAR might be an experimental or incomplete feature. Let me verify the wiki page exists and check if there's a specific alpha version.
-    1. github repo <main> 屬於 v2.7.12
-    2. mle-star framework (alpha version) 是在 v2.7.26 中
-<img src="images/workflow-undefined-issue.png" alt="image" width="600"/>
-    3. ✅ Finally Fix it with claude code. Now can try in command line interface.
-    ``` bash
-    # Using Python wrapper
-    python3 call_claude_flow_tool.py --dataset data/train.csv --target Sales --output ./models/ --name "sales-prediction"
+### Some Issues I Found
+1. claude-flow github repo is **v2.7.12**, but MLE_STAR workflow alpha version appears in **v2.7.26**
 
-    # Or directly with claude-flow CLI
-    claude-flow automation mle-star --dataset data/train.csv --target Sales --claude --name "my-experiment"
-    ```
-2. Run `claude-flow automation mle-star --dataset data/train.csv --target Sales --name "test" --claude` without local llm with cost usage in personal account.
+2. Claude-Flow doesn't support open model source to set into **src/cli/simple-commands/templates/mle-star-workflow.json** yet, so this practice still need to use claude-flow CLI to practice MLE_STAR workflow <2025/10/30>
+
+### Testing Record
+
+#### First Testing Record - mle_star_execution_20251030_141953.md
+1. ✅ Goods News
+    1. Both of the summaries by **ml-researcher-agent** and **data-analyst-agent** store in folder **models/v1-testing-record**
+2. ❌ Bad News
+    1. Only **ml-researcher-agent** and **data-analyst-agent** work, because agent in task2-1 doesn't get the specific file as input
+3. ➡️ Next Optimization
+    1. **Prompt engineering** on agents' scripts to make the agents work. Reference from [claude-flow github repo](https://github.com/ruvnet/claude-flow/tree/main/.claude/agents/analysis/code-review).
+    2. **Check workflow input and output**
+
+#### 

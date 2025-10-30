@@ -392,12 +392,7 @@
       {
         "level": 2,
         "role": "Phase Leads",
-        "agents": ["ml-researcher-agent", "data-analyst-agent", "ml-developer-alpha", "ml-developer-beta"]
-      },
-      {
-        "level": 3,
-        "role": "Specialists",
-        "agents": ["ablation-analyst-agent", "ensemble-architect-agent", "validator-agent"]
+        "agents": ["ml-researcher-agent", "data-analyst-agent", "ml-developer-alpha", "ml-developer-beta", "ablation-analyst-agent", "ensemble-architect-agent", "validator-agent"]
       }
     ]
   },

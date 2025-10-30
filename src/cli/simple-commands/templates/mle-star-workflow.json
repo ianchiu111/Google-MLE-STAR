@@ -12,7 +12,7 @@
   "variables": {
     "datasetPath": "${DATASET_PATH}",
     "targetColumn": "${TARGET_COLUMN}",
-    "outputDirectory": "/mle-star-output",
+    "outputDirectory": "./models/",
     "searchIterations": 3,
     "refinementIterations": 5,
     "ensembleSize": 5,

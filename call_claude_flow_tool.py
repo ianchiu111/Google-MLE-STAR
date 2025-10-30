@@ -14,6 +14,10 @@ from pathlib import Path
 from datetime import datetime
 from typing import Optional, Dict, Any
 import logging
+from dotenv import load_dotenv
+
+# Load environment variables from .env file for Ollama configuration
+load_dotenv(".env")
 
 # Configure logging
 logging.basicConfig(
@@ -42,7 +46,7 @@ class ClaudeFlowMLESTARService:
         search_iterations: int = 5,
         refinement_iterations: int = 8,
         max_agents: int = 8,
-        use_claude: bool = True,
+        use_claude: bool = False,  # Changed default to False to use Ollama
         interactive: bool = False
     ):
         """
@@ -56,7 +60,7 @@ class ClaudeFlowMLESTARService:
             search_iterations: Number of search iterations (default: 5)
             refinement_iterations: Number of refinement iterations (default: 8)
             max_agents: Maximum number of agents (default: 8)
-            use_claude: Use Claude for automation (default: True)
+            use_claude: Use Claude for automation (default: False, uses Ollama)
             interactive: Run in interactive mode (default: False)
         """
         self.dataset = dataset
@@ -75,11 +79,49 @@ class ClaudeFlowMLESTARService:
         # Output markdown file path
         self.markdown_output = Path(self.output_dir) / f"mle_star_execution_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
 
+        # Set up Ollama environment variables from .env
+        self._setup_ollama_env()
+
         logger.info(f"Initialized Claude Flow MLE-STAR Service")
         logger.info(f"  Dataset: {self.dataset}")
         logger.info(f"  Target: {self.target}")
         logger.info(f"  Output: {self.output_dir}")
         logger.info(f"  Markdown output: {self.markdown_output}")
+        logger.info(f"  Using Claude API: {self.use_claude}")
+        if not self.use_claude:
+            logger.info(f"  Ollama Model: {os.getenv('llm_model', 'Not set')}")
+            logger.info(f"  Ollama Base URL: {os.getenv('llm_base_url', 'Not set')}")
+
+    def _setup_ollama_env(self) -> None:
+        """
+        Set up Ollama environment variables for claude-flow to use
+
+        Sets claude-flow environment variables:
+        - DEFAULT_LLM_PROVIDER: Set to 'ollama' to use Ollama instead of Claude
+        - OLLAMA_API_URL: Ollama base URL
+        """
+        if not self.use_claude:
+            # Read from .env file and strip quotes
+            base_url = os.getenv('llm_base_url', 'http://127.0.0.1:11434/v1').strip('"').strip("'")
+            model = os.getenv('llm_model', 'qwen2.5:7b-instruct').strip('"').strip("'")
+
+            # Remove /v1 suffix if present (claude-flow adds it automatically)
+            ollama_base_url = base_url.replace('/v1', '')
+
+            # CRITICAL: Tell claude-flow to use Ollama provider instead of Anthropic
+            os.environ['DEFAULT_LLM_PROVIDER'] = 'ollama'
+
+            # Set Ollama-specific configuration for claude-flow
+            os.environ['OLLAMA_API_URL'] = ollama_base_url
+
+            # Unset ANTHROPIC_API_KEY to ensure it doesn't default to Claude
+            if 'ANTHROPIC_API_KEY' in os.environ:
+                del os.environ['ANTHROPIC_API_KEY']
+
+            logger.info(f"Configured Ollama environment:")
+            logger.info(f"  DEFAULT_LLM_PROVIDER: ollama")
+            logger.info(f"  OLLAMA_API_URL: {ollama_base_url}")
+            logger.info(f"  Model: {model}")
 
     def _build_command(self) -> list:
         """
@@ -114,6 +156,10 @@ class ClaudeFlowMLESTARService:
         ]
 
         # Add optional flags
+        # IMPORTANT: Do NOT add --claude flag when use_claude=False
+        # The --claude flag forces claude-flow to use Claude CLI which costs money
+        # When --claude is omitted, claude-flow will use the provider specified
+        # in DEFAULT_LLM_PROVIDER environment variable (which we set to 'ollama')
         if self.use_claude:
             command.append("--claude")
 
@@ -306,7 +352,7 @@ def call_claude_flow_service(
     search_iterations: int = 5,
     refinement_iterations: int = 8,
     max_agents: int = 8,
-    use_claude: bool = True,
+    use_claude: bool = False,  # Default to False to use Ollama
     interactive: bool = False
 ) -> Dict[str, Any]:
     """
@@ -322,7 +368,7 @@ def call_claude_flow_service(
         search_iterations: Number of search iterations (default: 5)
         refinement_iterations: Number of refinement iterations (default: 8)
         max_agents: Maximum number of agents (default: 8)
-        use_claude: Use Claude for automation (default: True)
+        use_claude: Use Claude for automation (default: False, uses Ollama from .env)
         interactive: Run in interactive mode (default: False)
 
     Returns:
@@ -337,7 +383,7 @@ def call_claude_flow_service(
         >>> results = call_claude_flow_service(
         ...     dataset="data/sales.csv",
         ...     target="revenue",
-        ...     output_dir="./models/revenue/",
+        ...     output_dir="./models/",
         ...     name="revenue-prediction",
         ...     search_iterations=5,
         ...     refinement_iterations=8,
@@ -412,9 +458,9 @@ if __name__ == "__main__":
         help="Maximum number of agents (default: 8)"
     )
     parser.add_argument(
-        "--no-claude",
+        "--claude",
         action="store_true",
-        help="Disable Claude integration"
+        help="Enable Claude integration (uses Ollama by default)"
     )
     parser.add_argument(
         "--interactive",
@@ -433,7 +479,7 @@ if __name__ == "__main__":
         search_iterations=args.search_iterations,
         refinement_iterations=args.refinement_iterations,
         max_agents=args.max_agents,
-        use_claude=not args.no_claude,
+        use_claude=args.claude,  # Now defaults to False (Ollama), unless --claude is passed
         interactive=args.interactive
     )
 

@@ -304,7 +304,7 @@ class RossmannDataAnalyst:
         self.analysis_results['insights'] = insights
         self.analysis_results['recommendations'] = recommendations
 
-    def save_results(self, output_dir='mle-star-output'):
+    def save_results(self, output_dir='./models'):
         """Save analysis results"""
         print("=" * 80)
         print("SAVING RESULTS")

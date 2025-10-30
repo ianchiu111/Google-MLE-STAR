@@ -6,9 +6,7 @@ This project will going to use the paper written by google cloud team to practic
 1. Langgraph + Ollama in Multi-Agent System
 2. Claude-Flow Service in Sales Prediction Workflow
 
-
-## 1️⃣ Langgraph + Ollama in Multi-Agent System
-### 📚 Reference
+## 📚 Reference
 * Paer Reading
     * [Google Cloud - MLE-STAR: Machine Learning Engineering Agent via Search and Targeted Refinement](https://arxiv.org/abs/2506.15692v3) 
 * Claude-Flow
@@ -17,8 +15,15 @@ This project will going to use the paper written by google cloud team to practic
 * Code Examples
     * [Web Search example - Langgraph with Ollama](https://github.com/john-adeojo/graph_websearch_agent)
 
-### 📁 Practice Dataset
+## 📁 Practice Dataset
 * [Rossmann Store Sales Prediction](https://www.kaggle.com/competitions/rossmann-store-sales/)
+
+
+
+## 1️⃣ Langgraph + Ollama in Multi-Agent System
+### Basic Information
+1. Branch Name：[**main**](https://github.com/ianchiu111/Google-MLE-STAR/tree/main)
+
 
 ### 🤖 Machine‑Learning AI Agent Framework and Concepts
 
@@ -59,7 +64,7 @@ Due to the resource limitation, so choose duckduckgo search engine as web search
 ## 2️⃣ Claude-Flow Service in Sales Prediction Workflow
 
 ### Basic Information
-1. Branch Name：**claude-flow/dev_main**
+1. Branch Name：[**claude-flow/dev_main**](https://github.com/ianchiu111/Google-MLE-STAR/tree/claude-flow/dev_main)
 2. Repo Architecture
 ```plaintext
 /Users/yuchen/Google-MLE-Agent/

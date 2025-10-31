@@ -53,23 +53,24 @@ Due to the resource limitation, so choose duckduckgo search engine as web search
 2. Repo Architecture
 ```plaintext
 /Users/yuchen/Google-MLE-Agent/
+├── .memoryignore/                          ⭐ Testing Records
 ├── data/                                   ⭐ Rossmann Sales Predictioin Dataset
 │   ├── data_cleaning.ipynb.                ⭐ Analyze Raw Dataset Myself
 │   ├── train.csv                           
 │   ├── test.csv
 │   ├── store.csv
 │   └── sample_submission.csv
-├── images/                                 ⭐ All necessary images
+├── images/                                 ⭐ Model output directory
 ├── models/                        ⭐ All outputs from mle-star workflow
 ├── src/
 │   └── cli/
 │       └── simple-commands/
 │           └── templates/
 │               └── mle-star-workflow.json  ⭐ Template to interact with claude-flow by CLI
-├── call_claude_flow_tool.py                ⭐ Python interface
-├── requirements.txt                        ⭐ Python dependencies
-├── README.md                               ⭐ Documentation
-└── finally_fix_the_issue.md                ⭐ This guide
+├── .gitignore                              ⭐ Files should be ignored when processing git
+├── data-analyst-agent_eda.py               ⭐ Python Code for Dataset Analysis & Profiling
+├── Google-MLE-Agent.pdf                    ⭐ Google MLE_STAR Paper
+└── README.md                               ⭐ README Documentation
 ```
 
 ### System Information

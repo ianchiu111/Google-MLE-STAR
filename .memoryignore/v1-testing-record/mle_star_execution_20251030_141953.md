@@ -8,7 +8,7 @@
 |-----------|-------|
 | Dataset | data/train.csv |
 | Target Column | Sales |
-| Output Directory | ./models/ |
+| Output Directory | models/ |
 | Search Iterations | 5 |
 | Refinement Iterations | 8 |
 | Max Agents | 8 |
@@ -18,7 +18,7 @@
 ## Command Executed
 
 ```bash
-claude-flow automation mle-star --dataset data/train.csv --target Sales --output ./models/ --search-iterations 5 --refinement-iterations 8 --max-agents 8
+claude-flow automation mle-star --dataset data/train.csv --target Sales --output models/ --search-iterations 5 --refinement-iterations 8 --max-agents 8
 ```
 
 ## Console Output
@@ -35,7 +35,7 @@ claude-flow automation mle-star --dataset data/train.csv --target Sales --output
 📊 Configuration:
   Dataset: data/train.csv
   Target: Sales
-  Output: ./models/
+  Output: models/
   Claude Integration: Enabled
   Execution Mode: Non-interactive (default)
   Stream Chaining: Enabled
@@ -111,8 +111,8 @@ Without Claude, this will simulate the workflow execution.
   ✅ Tool completed
   ✅ Tool completed
 💭 Good! I can see there are already some outputs from a previous run. Let me examine those and unde...
-🔧 Read: /Users/yuchen/Google-MLE-Agent/./models/ml-researc...
-🔧 Read: /Users/yuchen/Google-MLE-Agent/./models/ml-researc...
+🔧 Read: /Users/yuchen/Google-MLE-Agent/models/ml-researc...
+🔧 Read: /Users/yuchen/Google-MLE-Agent/models/ml-researc...
 🔧 Bash: npx claude-flow@alpha memory list
   ✅ Tool completed
   ✅ Tool completed
@@ -125,7 +125,7 @@ Without Claude, this will simulate the workflow execution.
 💭 Perfect! I can see that the ML Researcher Agent has already completed Phase 1 (research and model...
   ✅ Tool completed
   ✅ Tool completed
-🔧 Bash: ls -la ./models/
+🔧 Bash: ls -la models/
 🔧 Glob: **/*data-analyst*
 🔧 Bash: npx claude-flow@alpha memory query 'workflow' --namespace 'agent/*'
   ✅ Tool completed
@@ -139,14 +139,14 @@ Without Claude, this will simulate the workflow execution.
   ✅ Tool completed
   ✅ Tool completed
 💭 Good! I can see that both the ML Researcher Agent and Data Analyst Agent have completed their pha...
-🔧 Read: /Users/yuchen/Google-MLE-Agent/./models/data-analy...
-💭 Perfect! I can see existing data analysis outputs in `./models/`. Let me check what's alre...
-🔧 Read: /Users/yuchen/Google-MLE-Agent/./models/data-analy...
-🔧 Read: /Users/yuchen/Google-MLE-Agent/./models/ml-researc...
+🔧 Read: /Users/yuchen/Google-MLE-Agent/models/data-analy...
+💭 Perfect! I can see existing data analysis outputs in `models/`. Let me check what's alre...
+🔧 Read: /Users/yuchen/Google-MLE-Agent/models/data-analy...
+🔧 Read: /Users/yuchen/Google-MLE-Agent/models/ml-researc...
 🔧 Todo Write
   ✅ Tool completed
   ✅ Tool completed
-🔧 Read: /Users/yuchen/Google-MLE-Agent/./models/data-analy...
+🔧 Read: /Users/yuchen/Google-MLE-Agent/models/data-analy...
   ✅ Tool completed
   ✅ Tool completed
   ✅ Tool completed
@@ -486,7 +486,7 @@ Without Claude, this will simulate the workflow execution.
   ✅ task-5-1: Completed successfully
 
 💡 Next Steps:
-  • Check models in: ./models/
+  • Check models in: models/
   • Review experiment: mle-star-1761805194298
   • Validate results with your test data
 
@@ -501,6 +501,6 @@ The MLE-STAR workflow has completed successfully. Check the output directory for
 
 ## Output Directory
 
-All generated models and reports are saved in: `./models/`
+All generated models and reports are saved in: `models/`
 
 **Markdown Report Generated**: models/mle_star_execution_20251030_141953.md

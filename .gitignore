@@ -10,3 +10,4 @@ memo.md
 .env
 *.
 init
+__pycache__

@@ -291,18 +291,18 @@ The following keys are available in ReasoningBank for other agents:
 7. Store baseline results in memory for refinement agent
 
 **Key Files:**
-- EDA Analysis: `./models/data-analyst-agent_analysis.json`
-- EDA Report: `./models/data-analyst-agent_eda_report.md`
-- ML Research: `./models/ml-researcher-agent_phase1-research-report.md`
-- Model Candidates: `./models/ml-researcher-agent_phase1-model-candidates.json`
-- This Handoff: `./models/data-analyst-agent_handoff-summary.md`
+- EDA Analysis: `models/data-analyst-agent_analysis.json`
+- EDA Report: `models/data-analyst-agent_eda_report.md`
+- ML Research: `models/ml-researcher-agent_phase1-research-report.md`
+- Model Candidates: `models/ml-researcher-agent_phase1-model-candidates.json`
+- This Handoff: `models/data-analyst-agent_handoff-summary.md`
 
 **Expected Output Files:**
-- `./models/ml-foundation-agent_preprocessing-pipeline.py`
-- `./models/ml-foundation-agent_feature-engineering.py`
-- `./models/ml-foundation-agent_baseline-models.py`
-- `./models/ml-foundation-agent_baseline-results.json`
-- `./models/ml-foundation-agent_performance-report.md`
+- `models/ml-foundation-agent_preprocessing-pipeline.py`
+- `models/ml-foundation-agent_feature-engineering.py`
+- `models/ml-foundation-agent_baseline-models.py`
+- `models/ml-foundation-agent_baseline-results.json`
+- `models/ml-foundation-agent_performance-report.md`
 
 ---
 

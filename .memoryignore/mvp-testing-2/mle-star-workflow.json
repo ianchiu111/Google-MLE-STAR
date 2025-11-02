@@ -56,22 +56,6 @@
       }
     },
     {
-      "id": "ablation_agent",
-      "type": "code-analyzer",
-      "name": "Ablation Study Analyst",
-      "config": {
-        "programming_languages": [
-          "python", 
-          "jupyter"
-        ],
-        "capabilities": [
-          "code_review",
-          "ablation_study",
-          "performance_analysis"
-        ]
-      }
-    },
-    {
       "id": "refinement_agent",
       "type": "optimizer",
       "name": "Targeted Refinement Specialist", 
@@ -95,7 +79,7 @@
       "id": "web_search",
       "name": "Web Search for SOTA Approaches",
       "type": "research",
-      "description": "Read the user requirement ${task_description} and generate ${nums_solutions} kinds of machine learning algorithms, benchmarks, state-of-the-art github repository, kaggle solution and huggingface model from web search. Please ignore all files in .memoryignore folder when we searching",
+      "description": "Read the user requirement {task_description} and generate {nums_solutions} kinds of machine learning algorithms, benchmarks, state-of-the-art github repository, kaggle solution and huggingface model from web search. Please ignore .memoryignore folder when processing the dataset.",
       "assignTo": "research_agent",
       "input": {
         "task_description": "${task_description}",
@@ -121,7 +105,7 @@
       "id": "dataset_analysis",
       "name": "Dataset Analysis & Profiling",
       "type": "analysis",
-      "description": "Comprehensive analysis of dataset characteristics, quality, problem type identification and feature engineering recommendations. Please focus on the dataset ${dataset_path} and the specific column ${target} . Please ignore .memoryignore folder when processing the dataset.",
+      "description": "Comprehensive analysis of dataset characteristics, quality, problem type identification and feature engineering recommendations. Please focus on the dataset {dataset_path} and the specific column {target} . Please ignore .memoryignore folder when processing the dataset.",
       "assignTo": "foundation_agent",
       "input": {
         "dataset_path": "${dataset_path}",
@@ -133,57 +117,34 @@
         "data_quality_report": "object",
         "recommended_preprocessing": "array"
       }
-    }, 
-    {
-      "id": "ablation_study",
-      "name": "Ablation Analysis of Foundation Model",
-      "type": "analysis",
-      "description": "You have to review all the components from  the foundation model and dataset views in ablation study. About datasets, please focus on ${problem_type}, ${characteristics}, ${data_quality_report}, ${recommended_preprocessing}; About model, please read the research summarization from ${recommended_approaches}, ${model_algorithms}, ${benchmark_results} and ${implementation_examples}  . Please ignore .memoryignore folder when processing",
-      "assignTo": "ablation_agent",
-      "depends": ["dataset_analysis", "web_search"],
-      "input": { 
-        "problem_type": "${dataset_analysis.output.problem_type}", 
-        "characteristics": "${dataset_analysis.output.characteristics}",
-        "data_quality_report": "${dataset_analysis.output.data_quality_report}",
-        "recommended_preprocessing": "${dataset_analysis.output.recommended_preprocessing}",
-
-        "recommended_approaches": "${web_search.output.recommended_approaches}",
-        "model_algorithms": "${web_search.output.model_algorithms}",
-        "benchmark_results": "${web_search.output.benchmark_results}",
-        "implementation_examples": "${web_search.output.code_examples}"
-      },
-      "output": {
-        "highest_impact_component": "string",
-        "impact_scores": "object",
-        "improvement_opportunities": "array"
-      }
-    },
+    },    
     {
       "id": "targeted_refinement",
       "name": "Iterative Component Refinement",
       "type": "optimization",
-      "description": "Focus on the ablation study and targeted refinement to make the machine learning codes more efficient. Please ignore .memoryignore folder when processing. After that, please generate the best model configuration from your refinement.",
+      "description": "Deep, focused improvements on the highest-impact pipeline components identified through ablation. Please ignore .memoryignore folder when processing the dataset.",
       "assignTo": "refinement_agent",
-      "depends": ["ablation_study"],
+      "depends": ["dataset_analysis", "web_search"],
       "input": {
-        "highest_impact_component": "${ablation_study.output.highest_impact_component}", 
-        "impact_scores": "${ablation_study.output.impact_scores}",
-        "improvement_opportunities": "${ablation_study.output.improvement_opportunities}",
+        "target_component": "${dataset_analysis.output.highest_impact_component}", 
+        "baseline_performance": "${dataset_analysis.output.impact_scores}",
+        "improvement_strategies": "${dataset_analysis.output.improvement_opportunities}",
+        "recommended_approaches": "${web_search.output.recommended_approaches}",
+        "model_algorithms": "${web_search.output.model_algorithms}",
+        "benchmark_results": "${web_search.output.benchmark_results}",
+        "implementation_examples": "${web_search.output.code_examples}",
         "max_iterations": "${refinement_iterations}"
       },
       "output": {
         "optimized_components": "object",
         "performance_improvements": "object", 
         "refinement_history": "array",
-        "best_configuration": "object",
-        "refinement_summary": "object"
+        "best_configuration": "object"
       }
     }
   ],
   "dependencies": {
-    "ablation_study": ["dataset_analysis", "web_search"],
-    "targeted_refinement": ["ablation_study"]
-
+    "targeted_refinement": ["dataset_analysis", "web_search"]
   },
   "settings": {
     "maxConcurrency": 3,

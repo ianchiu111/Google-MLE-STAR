@@ -11,6 +11,3 @@ memo.md
 *.
 init
 __pycache__
-
-# model files
-*.pkl

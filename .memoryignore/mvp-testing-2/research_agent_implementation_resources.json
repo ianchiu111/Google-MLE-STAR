@@ -1,0 +1,506 @@
+{
+  "research_metadata": {
+    "agent_id": "research_agent",
+    "session_id": "automation-session-1762063838529-m3d5gct74",
+    "execution_id": "workflow-exec-1762063838529-0scthk10l",
+    "date": "2025-11-02",
+    "research_depth": "comprehensive",
+    "status": "completed"
+  },
+  "dataset_context": {
+    "name": "Rossmann Store Sales",
+    "source": "Kaggle Competition",
+    "stores": 1115,
+    "location": "Germany",
+    "prediction_window": "6 weeks",
+    "evaluation_metric": "RMSPE",
+    "key_factors": [
+      "promotions",
+      "competition",
+      "school_holidays",
+      "state_holidays",
+      "seasonality",
+      "locality"
+    ]
+  },
+  "recommended_models": {
+    "tier_1_primary": [
+      {
+        "name": "XGBoost",
+        "priority": 1,
+        "best_rmspe": 0.11,
+        "advantages": [
+          "Fast training",
+          "Low memory usage",
+          "Handles missing data",
+          "Built-in regularization"
+        ],
+        "use_case": "Primary baseline model",
+        "implementation": "xgboost.XGBRegressor"
+      },
+      {
+        "name": "LightGBM",
+        "priority": 2,
+        "best_wmape": 0.069,
+        "advantages": [
+          "Efficient on high-dimensional data",
+          "Native categorical handling",
+          "Lower memory footprint",
+          "Faster than XGBoost on large datasets"
+        ],
+        "use_case": "Alternative baseline for comparison",
+        "implementation": "lightgbm.LGBMRegressor"
+      },
+      {
+        "name": "CatBoost",
+        "priority": 3,
+        "best_rmse": 0.605,
+        "advantages": [
+          "Native categorical variables",
+          "Minimal preprocessing needed",
+          "Robust to overfitting",
+          "Ordered boosting"
+        ],
+        "use_case": "High-cardinality categorical features",
+        "implementation": "catboost.CatBoostRegressor"
+      }
+    ],
+    "tier_2_advanced": [
+      {
+        "name": "Temporal Fusion Transformer",
+        "priority": 4,
+        "mase_improvement": "26-29%",
+        "wql_reduction": "34%",
+        "advantages": [
+          "Multi-horizon forecasting",
+          "Interpretable attention",
+          "Static + dynamic features",
+          "State-of-the-art for complex temporal"
+        ],
+        "use_case": "Complex temporal dependencies",
+        "implementation": "pytorch_forecasting.TemporalFusionTransformer"
+      },
+      {
+        "name": "Entity Embedding Neural Network",
+        "priority": 5,
+        "kaggle_rank": "3rd place",
+        "advantages": [
+          "Learns categorical relationships",
+          "Better than one-hot encoding",
+          "Captures latent features",
+          "Transferable embeddings"
+        ],
+        "use_case": "When categorical features dominate",
+        "implementation": "PyTorch custom nn.Embedding"
+      },
+      {
+        "name": "TabNet",
+        "priority": 6,
+        "performance": "comparable_to_GBM",
+        "advantages": [
+          "Attention-based feature selection",
+          "Interpretable predictions",
+          "Minimal feature engineering",
+          "Handles tabular data natively"
+        ],
+        "use_case": "Interpretability requirements",
+        "implementation": "pytorch_tabnet.tab_model.TabNetRegressor"
+      }
+    ]
+  },
+  "ensemble_strategies": {
+    "stacking": {
+      "priority": 1,
+      "description": "Multi-level ensemble with diverse base models",
+      "base_models": [
+        "XGBoost_variant_1",
+        "XGBoost_variant_2",
+        "XGBoost_variant_3",
+        "LightGBM_variant_1",
+        "LightGBM_variant_2",
+        "CatBoost",
+        "RandomForest"
+      ],
+      "meta_model": "Ridge or lightweight XGBoost",
+      "cv_strategy": "5-fold time-based",
+      "features": "out_of_fold_predictions + passthrough_original"
+    },
+    "pso_enhanced": {
+      "priority": 2,
+      "description": "Particle Swarm Optimization for ensemble weights",
+      "optimization_target": "RMSPE",
+      "components": [
+        "LightGBM",
+        "XGBoost",
+        "Deep Neural Network"
+      ],
+      "tuning": "PSO for hyperparameters and weights"
+    },
+    "blending": {
+      "priority": 3,
+      "description": "Simple weighted average on holdout set",
+      "holdout_size": "10%",
+      "training_size": "90%",
+      "meta_model": "weighted_average or linear_regression",
+      "use_case": "Quick ensemble with limited models"
+    }
+  },
+  "feature_engineering": {
+    "lag_features": {
+      "lags": [1, 7, 14, 30, 365],
+      "target": "Sales",
+      "description": "Historical sales values at specific offsets",
+      "implementation": "df['sales_lag_7'] = df.groupby('Store')['Sales'].shift(7)"
+    },
+    "rolling_statistics": {
+      "windows": [3, 7, 14, 28, 30],
+      "metrics": ["mean", "std", "min", "max"],
+      "description": "Rolling aggregations to capture trends",
+      "implementation": "df['sales_rolling_mean_7'] = df.groupby('Store')['Sales'].rolling(7).mean()"
+    },
+    "promotion_features": {
+      "features": [
+        "promo_duration_consecutive_days",
+        "days_since_last_promo",
+        "promo_frequency_last_30_days",
+        "promo_x_dayofweek_interaction"
+      ],
+      "description": "Promotional effect modeling"
+    },
+    "holiday_features": {
+      "features": [
+        "state_holiday_binary",
+        "school_holiday_binary",
+        "days_until_next_holiday",
+        "days_since_last_holiday",
+        "is_weekend",
+        "month_seasonality",
+        "quarter"
+      ],
+      "description": "Holiday and seasonal effects"
+    },
+    "competition_features": {
+      "features": [
+        "competition_distance",
+        "competition_duration_months",
+        "competition_since_year_month"
+      ],
+      "description": "Competitive environment modeling"
+    },
+    "store_features": {
+      "features": [
+        "store_type",
+        "assortment_type",
+        "store_age",
+        "historical_avg_sales_per_store",
+        "store_trend_coefficient"
+      ],
+      "description": "Store-specific characteristics"
+    },
+    "entity_embeddings": {
+      "categorical_features": {
+        "Store": {"cardinality": 1115, "embedding_dim": 50},
+        "DayOfWeek": {"cardinality": 7, "embedding_dim": 4},
+        "Month": {"cardinality": 12, "embedding_dim": 6},
+        "StoreType": {"cardinality": 4, "embedding_dim": 3},
+        "Assortment": {"cardinality": 3, "embedding_dim": 2},
+        "PromoInterval": {"cardinality": 4, "embedding_dim": 2}
+      },
+      "description": "Neural network learned embeddings for categorical variables",
+      "implementation": "PyTorch nn.Embedding layers"
+    },
+    "temporal_features": {
+      "features": [
+        "year",
+        "month",
+        "day",
+        "day_of_week",
+        "week_of_year",
+        "is_month_start",
+        "is_month_end",
+        "is_quarter_start",
+        "is_quarter_end"
+      ],
+      "description": "Time-based cyclic features"
+    }
+  },
+  "validation_strategy": {
+    "primary": {
+      "method": "time_based_split",
+      "description": "Respect temporal ordering, no future data leakage",
+      "train_period": "First 80% of time range",
+      "validation_period": "Last 20% of time range",
+      "critical": "NEVER use random split for time series"
+    },
+    "advanced": {
+      "method": "walk_forward_validation",
+      "description": "Expanding or sliding window",
+      "n_splits": 5,
+      "implementation": "TimeSeriesSplit from sklearn"
+    },
+    "group_aware": {
+      "method": "store_based_group_kfold",
+      "description": "Ensure stores don't leak between train/val",
+      "groups": "Store ID",
+      "implementation": "GroupKFold with Store as group"
+    }
+  },
+  "performance_benchmarks": {
+    "kaggle_competition": {
+      "1st_place": {
+        "team": "Gert Jacobusse",
+        "rmspe": "~0.10",
+        "approach": "Ensemble of 20+ XGBoost models"
+      },
+      "3rd_place": {
+        "team": "Neokami Inc",
+        "approach": "Entity embedding neural networks"
+      },
+      "top_10_percent": {
+        "rank": "66/3303",
+        "rmspe": "0.14",
+        "approach": "glmnet + XGBoost average"
+      }
+    },
+    "literature_benchmarks": {
+      "gradient_boosting_best": 0.06,
+      "xgboost_single_model": 0.11,
+      "random_forest_basic": 0.123,
+      "tft_vs_traditional_improvement": "26-29% MASE",
+      "pso_ensemble_best": "lowest_rmspe_2025"
+    }
+  },
+  "implementation_repositories": {
+    "production_ready": [
+      {
+        "name": "alanmaehara/Sales-Prediction",
+        "url": "https://github.com/alanmaehara/Sales-Prediction",
+        "highlights": [
+          "CRISP-DM methodology",
+          "44 business hypotheses",
+          "$284M prediction",
+          "Comprehensive EDA"
+        ],
+        "recommended_for": "Full pipeline reference"
+      },
+      {
+        "name": "rmanak/store_sale",
+        "url": "https://github.com/rmanak/store_sale",
+        "rmspe": 0.14,
+        "highlights": [
+          "Clean code",
+          "Good feature engineering",
+          "Well documented"
+        ],
+        "recommended_for": "Feature engineering examples"
+      },
+      {
+        "name": "igorvgp/DS_rossmann_stores",
+        "url": "https://github.com/igorvgp/DS_rossmann_stores",
+        "mape": 0.14,
+        "highlights": [
+          "Boruta feature selection",
+          "Telegram bot deployment",
+          "Production ready"
+        ],
+        "recommended_for": "Deployment patterns"
+      }
+    ],
+    "research_learning": [
+      {
+        "name": "mabrek/kaggle-rossman",
+        "url": "https://github.com/mabrek/kaggle-rossman",
+        "rank": "Top 10% (66th)",
+        "highlights": [
+          "R implementation",
+          "Detailed blog post",
+          "Excellent feature engineering"
+        ],
+        "recommended_for": "Competition strategy insights"
+      }
+    ]
+  },
+  "mle_star_workflow_recommendations": {
+    "phase_1_search_foundation": {
+      "priority_models": ["XGBoost", "LightGBM", "CatBoost"],
+      "expected_rmspe": "0.12-0.15",
+      "effort_allocation": {
+        "data_preparation": "20%",
+        "basic_features": "30%",
+        "model_training": "30%",
+        "validation": "20%"
+      },
+      "deliverables": [
+        "baseline_xgboost_model.pkl",
+        "baseline_lightgbm_model.pkl",
+        "validation_results.json",
+        "feature_importance.csv"
+      ]
+    },
+    "phase_2_targeted_refinement": {
+      "focus_areas": {
+        "feature_engineering": {
+          "allocation": "50%",
+          "priority_features": [
+            "lag_features_1_7_14_30",
+            "rolling_statistics_7_14_28",
+            "promo_duration",
+            "holiday_indicators"
+          ]
+        },
+        "hyperparameter_tuning": {
+          "allocation": "30%",
+          "parameters": [
+            "learning_rate",
+            "max_depth",
+            "subsample",
+            "colsample_bytree",
+            "reg_alpha",
+            "reg_lambda"
+          ]
+        },
+        "validation_strategy": {
+          "allocation": "20%",
+          "methods": [
+            "time_based_split",
+            "walk_forward_validation",
+            "store_group_kfold"
+          ]
+        }
+      },
+      "expected_rmspe": "0.08-0.12",
+      "deliverables": [
+        "refined_xgboost_model.pkl",
+        "refined_lightgbm_model.pkl",
+        "feature_engineering_pipeline.pkl",
+        "hyperparameter_tuning_results.json"
+      ]
+    },
+    "phase_3_ensemble": {
+      "strategy": "stacking_ensemble",
+      "base_models": 5-7,
+      "meta_model": "ridge_or_xgboost",
+      "expected_rmspe": "0.06-0.10",
+      "deliverables": [
+        "ensemble_model.pkl",
+        "model_weights.json",
+        "ensemble_performance_report.md"
+      ]
+    },
+    "phase_4_advanced_optional": {
+      "approaches": [
+        "entity_embeddings",
+        "temporal_fusion_transformer",
+        "pso_hyperparameter_optimization",
+        "weather_data_integration"
+      ],
+      "expected_rmspe": "0.05-0.08",
+      "when_to_use": "If ensemble doesn't reach target or interpretability needed"
+    }
+  },
+  "critical_success_factors": [
+    {
+      "factor": "Feature Engineering Over Model Complexity",
+      "importance": "Critical",
+      "allocation": "50% of total effort",
+      "rationale": "Tree models + good features > complex NN + raw features"
+    },
+    {
+      "factor": "Time-Based Validation",
+      "importance": "Mandatory",
+      "rationale": "Random CV overestimates performance on time series",
+      "implementation": "Always use time-based or walk-forward splits"
+    },
+    {
+      "factor": "Store-Level Modeling",
+      "importance": "High",
+      "rationale": "Different stores have different patterns",
+      "approach": "Store-specific features, hierarchical models, or clustering"
+    },
+    {
+      "factor": "Ensemble Diversity",
+      "importance": "High",
+      "rationale": "3-5 diverse models outperform single best model",
+      "strategy": "Different algorithms, features, time windows"
+    },
+    {
+      "factor": "RMSPE Metric Understanding",
+      "importance": "Medium",
+      "notes": [
+        "Penalizes percentage errors equally",
+        "Focus on ratio predicted/actual",
+        "Log transform can help optimization"
+      ]
+    }
+  ],
+  "common_pitfalls": [
+    {
+      "pitfall": "Data Leakage",
+      "description": "Using future information in features",
+      "prevention": "Strict time-based validation, check feature creation logic"
+    },
+    {
+      "pitfall": "Training on Closed Stores",
+      "description": "Including Sales=0 when store is closed",
+      "prevention": "Filter Open==1 or handle closed days separately"
+    },
+    {
+      "pitfall": "Ignoring Store Closures",
+      "description": "Not modeling store closure patterns",
+      "prevention": "Add features for closure probability, refurbishment"
+    },
+    {
+      "pitfall": "Over-reliance on Neural Networks",
+      "description": "Using complex NN when tree models suffice",
+      "prevention": "Start with gradient boosting, add NN only if needed"
+    },
+    {
+      "pitfall": "Improper Promo Handling",
+      "description": "Not capturing promotional effects properly",
+      "prevention": "Engineer promo duration, interaction terms, lag effects"
+    }
+  ],
+  "handoff_to_foundation_agent": {
+    "status": "ready",
+    "recommended_actions": [
+      "Implement XGBoost baseline with basic features",
+      "Establish RMSPE baseline (~0.15)",
+      "Set up time-based validation pipeline",
+      "Create feature engineering pipeline for lags and rolling stats",
+      "Add LightGBM for comparison",
+      "Hyperparameter tuning to reach RMSPE < 0.12"
+    ],
+    "data_location": {
+      "train": "data/train.csv",
+      "test": "data/test.csv",
+      "store": "data/store.csv",
+      "sample_submission": "data/sample_submission.csv"
+    },
+    "target_metrics": {
+      "baseline": 0.15,
+      "refined": 0.10,
+      "ensemble": 0.08,
+      "advanced": 0.06
+    },
+    "priority_features": [
+      "lag_features_1_7_14_30",
+      "rolling_mean_7_14_28",
+      "promo_duration",
+      "days_to_holiday",
+      "store_avg_sales",
+      "day_of_week",
+      "month",
+      "year",
+      "competition_distance",
+      "store_type"
+    ]
+  },
+  "research_sources": {
+    "web_searches_conducted": 9,
+    "papers_reviewed": 15,
+    "github_repos_analyzed": 10,
+    "kaggle_solutions_studied": 5,
+    "date_range": "2015-2025",
+    "focus_on_recent": "2024-2025 literature prioritized"
+  }
+}

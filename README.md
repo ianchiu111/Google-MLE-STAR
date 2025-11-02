@@ -60,8 +60,8 @@ Due to the resource limitation, so choose duckduckgo search engine as web search
 │   ├── test.csv
 │   ├── store.csv
 │   └── sample_submission.csv
-├── images/                                 ⭐ Model output directory
-├── models/                        ⭐ All outputs from mle-star workflow
+├── images/                                 ⭐ Images for README.md
+├── models/                                 ⭐ AModel output directory
 ├── src/
 │   └── cli/
 │       └── simple-commands/
@@ -117,7 +117,7 @@ Overview of MLE-STAR Framework.
 
 2. MVP Test
     * Claude-Flow Template: .memoryignore/mvp-testing-recor/mle-star-workflow.json
-    * Command `claude-flow automation mle-star --dataset data/train.csv --target Sales --output models/ --name mle-star-workflow --refinement_iterations 2 --claude`
+    * Command `claude-flow automation mle-star --dataset data/train.csv --target Sales --output models/ --refinement_iterations 2 --claude`
 
         | Task Phase | Task ID | Task Name | Agent ID | Agent Type | **Task Dependencies** |
         | --- | --- | --- | --- | --- | --- |
@@ -145,6 +145,9 @@ Overview of MLE-STAR Framework.
 
 
 ### Some Issues I Found
-1. claude-flow github repo is **v2.7.12**, but MLE_STAR workflow alpha version appears in **v2.7.26**<2025/10/30>
+1. claude-flow github repo is **v2.7.12**, but MLE_STAR workflow alpha version appears in **v2.7.26**. <2025/10/30>
 
-2. Claude-Flow doesn't support open model source to set into **src/cli/simple-commands/templates/mle-star-workflow.json** yet, so this practice still need to use claude-flow CLI to practice MLE_STAR workflow <2025/10/30>
+2. Claude-Flow doesn't support open model source to set into **src/cli/simple-commands/templates/mle-star-workflow.json** yet, so this practice still need to use claude-flow CLI to practice MLE_STAR workflow. <2025/10/30>
+
+3. Original workflow template setup timeout, so the agent with `timeout` tag always finish so fast. <2025/10/31>
+4. Because all the agents use same memory + Use the `"${task_id.output.parameter}"` setup to ensure the chats between agents are clean enough. <2025/10/31>

@@ -7,10 +7,30 @@
     "target_column": "${target}",
     "model_output_dir": "models/",
     "experiment_name": "mle_star_experiment",
-    "search_iterations": 1,
+    "search_iterations": "${search_iterations}",
     "refinement_iterations": "${refinement_iterations}"
   },
   "agents": [
+    {
+      "id": "research_agent",
+      "type": "researcher",
+      "name": "Web Search & Deep Research Agent",
+      "config": {
+        "capabilities": [
+          "web_search", 
+          "model_research", 
+          "approach_validation"
+        ],
+        "search_depth": "comprehensive",
+        "domains": [
+          "machine_learning", 
+          "data_science", 
+          "kaggle_solutions",
+          "huggingface_models",
+          "github_repositories"
+        ]
+      }
+    },
     {
       "id": "foundation_agent", 
       "type": "coder",
@@ -69,6 +89,33 @@
         "data_quality_report": "object",
         "recommended_preprocessing": "array"
       }
+    },    
+    {
+      "id": "web_search",
+      "name": "Web Search for SOTA Approaches",
+      "type": "research",
+      "description": "Comprehensive research of machine learning algorithms, benchmarks, state-of-the-art github repository, kaggle solution and huggingface model .Please ignore .memoryignore folder when processing the dataset.",
+      "assignTo": "research_agent",
+      "depends": ["dataset_analysis"],
+      "input": {
+        "problem_type": "${dataset_analysis.problem_type}",
+        "data_characteristics": "${dataset_analysis.characteristics}",
+        "retry": "${search_iterations}",
+        "search_queries": [
+          "latest machine learning models in huggingface to solve ${problem_type}",
+          "github latest solutions ${problem_type}",
+          "state-of-the-art ${problem_type} benchmarks",
+          "feature engineering techniques ${problem_type}",
+          "the most famous algorithms for ${problem_type}"
+        ]
+      },
+      "retries": "${search_iterations}",
+      "output": {
+        "recommended_approaches": "array",
+        "model_algorithms": "array", 
+        "benchmark_results": "object",
+        "implementation_examples": "array"
+      }
     },
     {
       "id": "targeted_refinement",
@@ -76,14 +123,17 @@
       "type": "optimization",
       "description": "Deep, focused improvements on the highest-impact pipeline components identified through ablation. Please ignore .memoryignore folder when processing the dataset.",
       "assignTo": "refinement_agent",
-      "depends": ["dataset_analysis"],
+      "depends": ["dataset_analysis", "web_search"],
       "input": {
         "target_component": "${dataset_analysis.output.highest_impact_component}", 
         "baseline_performance": "${dataset_analysis.output.impact_scores}",
         "improvement_strategies": "${dataset_analysis.output.improvement_opportunities}",
+        "recommended_approaches": "${web_search.output.recommended_approaches}",
+        "model_algorithms": "${web_search.output.model_algorithms}",
+        "benchmark_results": "${web_search.output.benchmark_results}",
+        "implementation_examples": "${web_search.output.implementation_examples}",
         "max_iterations": "${refinement_iterations}"
       },
-      "timeout": 2400,
       "output": {
         "optimized_components": "object",
         "performance_improvements": "object", 
@@ -93,7 +143,8 @@
     }
   ],
   "dependencies": {
-    "targeted_refinement": ["dataset_analysis"]
+    "web_search": ["dataset_analysis"],
+    "targeted_refinement": ["dataset_analysis","web_search"]
   },
   "settings": {
     "maxConcurrency": 3,
@@ -116,6 +167,6 @@
       "No data leakage detected",
       "Cross-validation score variance < 0.05",
       "All components properly documented"
-    ]
+    ]                                       
   }
 }

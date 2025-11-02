@@ -68,7 +68,6 @@ Due to the resource limitation, so choose duckduckgo search engine as web search
 │           └── templates/
 │               └── mle-star-workflow.json  ⭐ Template to interact with claude-flow by CLI
 ├── .gitignore                              ⭐ Files should be ignored when processing git
-├── data-analyst-agent_eda.py               ⭐ Python Code for Dataset Analysis & Profiling
 ├── Google-MLE-Agent.pdf                    ⭐ Google MLE_STAR Paper
 └── README.md                               ⭐ README Documentation
 ```

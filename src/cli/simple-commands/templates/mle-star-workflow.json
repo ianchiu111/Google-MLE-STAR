@@ -10,7 +10,8 @@
     "search_iterations": "${search_iterations}",
     "refinement_iterations": "${refinement_iterations}",
     "nums_solutions": "${nums_solutions}",
-    "task_description": "${task_description}"
+    "task_description": "${task_description}",
+    "max-agents": 7
   },
   "agents": [
     {
@@ -88,6 +89,60 @@
         ],
         "ablation_analysis": true
       }
+    },
+    {
+      "id": "ensemble_agent",
+      "type": "architect", 
+      "name": "Ensemble & Meta-Learning Expert",
+      "config": {
+        "capabilities": [
+          "model_stacking", 
+          "ensemble_methods", 
+          "meta_learning"
+        ],
+        "ensemble_strategies": [
+          "voting", 
+          "stacking", 
+          "blending", 
+          "dynamic_weighting"
+        ]
+      }
+    },
+    {
+      "id": "validation_agent",
+      "type": "tester",
+      "name": "Validation & Debugging Agent",
+      "config": {
+        "capabilities": [
+          "cross_validation", 
+          "error_detection", 
+          "data_leakage_prevention"
+        ],
+        "validation_strategies": [
+          "stratified_kfold", 
+          "time_series_split", 
+          "leave_one_out"
+        ],
+        "debugging_tools": [
+          "profiling", 
+          "error_correction", 
+          "data_integrity_checks"
+        ]
+      }
+    },
+    {
+      "id": "orchestrator",
+      "type": "coordinator",
+      "name": "MLE-STAR Orchestrator",
+      "config": {
+        "capabilities": [
+          "workflow_coordination", 
+          "performance_tracking", 
+          "resource_management"
+        ],
+        "coordination_mode": "adaptive",
+        "monitoring_enabled": true
+      }
     }
   ],
   "tasks": [
@@ -131,14 +186,15 @@
         "problem_type": "string",
         "characteristics": "object",
         "data_quality_report": "object",
-        "recommended_preprocessing": "array"
+        "recommended_preprocessing": "array",
+        "base_models": "array"
       }
     }, 
     {
       "id": "ablation_study",
       "name": "Ablation Analysis of Foundation Model",
       "type": "analysis",
-      "description": "You have to review all the components from  the foundation model and dataset views in ablation study. About datasets, please focus on ${problem_type}, ${characteristics}, ${data_quality_report}, ${recommended_preprocessing}; About model, please read the research summarization from ${recommended_approaches}, ${model_algorithms}, ${benchmark_results} and ${implementation_examples}  . Please ignore .memoryignore folder when processing",
+      "description": "You have to review all the components from  the foundation model and dataset views in ablation study. About datasets, please focus on ${problem_type}, ${characteristics}, ${data_quality_report}, ${recommended_preprocessing}; About model, please read the research summarization from ${recommended_approaches}, ${model_algorithms}, ${benchmark_results} and ${implementation_examples}. After that please summarize with key findings and recommendations about which components to keep, discard or improve. Please ignore .memoryignore folder when processing",
       "assignTo": "ablation_agent",
       "depends": ["dataset_analysis", "web_search"],
       "input": { 
@@ -162,7 +218,7 @@
       "id": "targeted_refinement",
       "name": "Iterative Component Refinement",
       "type": "optimization",
-      "description": "Focus on the ablation study and targeted refinement to make the machine learning codes more efficient. Please ignore .memoryignore folder when processing. After that, please generate the best model configuration from your refinement.",
+      "description": "Focus on the ablation study and targeted refinement and generate ways to make the machine learning codes more efficient. It's fine to generate codes, concepts or summarizations. After that, please generate the best model configuration from your refinement. Please ignore .memoryignore folder when processing. ",
       "assignTo": "refinement_agent",
       "depends": ["ablation_study"],
       "input": {
@@ -174,20 +230,90 @@
       "output": {
         "optimized_components": "object",
         "performance_improvements": "object", 
-        "refinement_history": "array",
         "best_configuration": "object",
         "refinement_summary": "object"
+      }
+    },
+    {
+      "id": "ensemble_creation",
+      "name": "Adaptive Ensemble Building",
+      "type": "architecture",
+      "description": "Focus on the targeted components and try to generate ensemble model with meta-learning techniques to further improve the original model performance.",
+      "assignTo": "ensemble_agent",
+      "depends": ["targeted_refinement"],
+      "input": {
+        "base_models": "${dataset_analysis.output.base_models}",
+        "individual_performances": "${targeted_refinement.output.performance_improvements}",
+        "refinement_summary": "${targeted_refinement.output.refinement_summary}",
+        "ensemble_strategies": [
+          "stacking_with_meta_learner",
+          "dynamic_weighting",
+          "bayesian_model_averaging",
+          "mixture_of_experts"
+        ]
+      },
+      "output": {
+        "ensemble_model": "object",
+        "ensemble_performance": "object",
+        "combination_strategy": "string",
+        "meta_learner_details": "object"
+      }
+    },
+    {
+      "id": "validation_and_debugging",
+      "name": "Comprehensive Validation & Error Correction",
+      "type": "testing",
+      "description": "Rigorous validation with data leakage prevention, error correction, and performance verification",
+      "assignTo": "validation_agent",
+      "depends": ["targeted_refinement"],
+      "input": {
+        "final_model": "${ensemble_creation.output.ensemble_model}",
+        "full_pipeline": "${targeted_refinement.output.best_configuration}",
+        "validation_config": {
+          "cv_folds": 5,
+          "test_size": 0.2,
+          "stratification": true,
+          "random_seed": 42
+        }
+      },
+      "output": {
+        "validation_results": "object",
+        "cross_validation_scores": "array",
+        "data_leakage_check": "boolean",
+        "error_analysis": "object",
+        "final_performance_metrics": "object"
+      }
+    },
+    {
+      "id": "model_deployment_prep",
+      "name": "Production Readiness & Deployment",
+      "type": "deployment",
+      "description": "Prepare final solutionmodel for production deployment with monitoring, versioning, and documentation",
+      "assignTo": "orchestrator",
+      "depends": ["ensemble_creation", "validation_and_debugging"],
+      "input": {
+        "validated_model": "${validation_and_debugging.output}",
+        "performance_benchmarks": "${validation_and_debugging.output.final_performance_metrics}",
+        "deployment_target": "production"
+      },
+      "condition": "${validation_and_debugging.output.final_performance_metrics.accuracy} > 0.85",
+      "output": {
+        "deployment_package": "object",
+        "model_documentation": "object",
+        "monitoring_config": "object",
+        "deployment_instructions": "string"
       }
     }
   ],
   "dependencies": {
     "ablation_study": ["dataset_analysis", "web_search"],
-    "targeted_refinement": ["ablation_study"]
-
+    "targeted_refinement": ["ablation_study"],
+    "ensemble_creation": ["targeted_refinement"],
+    "validation_and_debugging": ["targeted_refinement"],
+    "model_deployment_prep": ["ensemble_creation", "validation_and_debugging"]
   },
   "settings": {
     "maxConcurrency": 3,
-    "timeout": 7200,
     "retryPolicy": "exponential",
     "failurePolicy": "continue",
     "quality_threshold": 0.8,

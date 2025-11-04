@@ -3,7 +3,7 @@ Hi, I'm YuChen Chiu.
 
 This project will going to use the paper written by google cloud team to practice **Machine Learning Engineering Agent via Search and Targeted Refinement Workflow** by two approaches in different branches below:
 
-1. [**Claude-Flow Service in Sales Prediction Workflow**](https://github.com/ianchiu111/Google-MLE-STAR/tree/claude-flow/dev_main)
+1. [**Claude-Flow Service**](https://github.com/ianchiu111/Google-MLE-STAR/tree/claude-flow/dev_main)
 2. [**Langgraph + Ollama in Multi-Agent**](https://github.com/ianchiu111/Google-MLE-STAR/tree/main)
 
 
@@ -33,15 +33,23 @@ This project will going to use the paper written by google cloud team to practic
 │   ├── store.csv
 │   └── sample_submission.csv
 ├── images/                                 ⭐ Images for README.md
-├── models/                                 ⭐ AModel output directory
+├── models/                                 ⭐ Model output directory
+├── Prompts/
+│   └── specialized_agent_prompt.py         ⭐ Agent prompts in langgraph swarm framework
 ├── src/
 │   └── cli/
 │       └── simple-commands/
 │           └── templates/
 │               └── mle-star-workflow.json  ⭐ Template to interact with claude-flow by CLI
+├── Tools/
+│   └── claudeFlow_agent_tool.py            ⭐ Defined tool to extract arguments from user query and use <claude-flow automation> command
+├── .gitattributes                          ⭐ Git LFS (Large File Storage)
 ├── .gitignore                              ⭐ Files should be ignored when processing git
 ├── Google-MLE-Agent.pdf                    ⭐ Google MLE_STAR Paper
-└── README.md                               ⭐ README Documentation
+├── graph.py                                ⭐ Langgraph Swarm Framework Setup
+├── main.py                                 ⭐ Entry point with natural language to test mle-star workflow
+├── README.md                               ⭐ README Documentation
+└── requirement.txt                         ⭐ Python requirements
 ```
 
 ### System Workflow
@@ -59,7 +67,7 @@ Note:
 
 <img src="images/MLE-Agent Workflow.png" alt="image" width="600"/>
 
-## 📝 Testing Record
+## 📝 Demo Progress
 > Note 1: Before using claude-flow CLI, clean the output folder to avoid unaccurate.
 * [Reference: `claude-flow automation mle-star [options]`](https://github.com/ruvnet/claude-flow/wiki/MLE-STAR-Workflow#-complete-mle-star-options)
     * Required:
@@ -149,6 +157,18 @@ Note:
    <img src=".memoryignore/mvp-testing-2/token_usage.png" alt="image" width="600"/>
 
 
+### Final Version
+* Goal:
+    * Set the workflow as a defined tool
+    * Natural Language in -> Mission summary out
+    * Utilize 7 agents in 5 work phase to practice whole mle-star workflow
+* Claude-Flow Template:
+    * `src/cli/simple-commands/templates/mle-star-workflow.json`
+* Modify command based on user query
+
+* Processing Result Summary
+
+   <img src="images/MLE-STAR Architecture.png" alt="image" width="400"/>
 
 ## 🔍 Issues
 1. `Errors: task_execution: Process exited with code 1` means token is out of limitation

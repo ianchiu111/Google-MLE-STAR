@@ -56,41 +56,9 @@ This project will going to use the paper written by google cloud team to practic
 
 Overview of MLE-STAR Framework.
 
-(a) **AI Research stage**: MLE-STAR use **Web Search** to retrieves task-specific models to generate an initial solution.
 
-(b) **Outer Loop: Target Issue stage**: Find out which target code block of ML components can be better via ablation study.
-
-(c) **Inner Loop: Code Block Refinement**: Iteratively refine the target code block until where the improved solution of inner loop becomes the latest solution in outer loop.
-
-Note: 
-* [**ablation study**](https://blog.csdn.net/flyfish1986/article/details/104812229)
-
-<img src="images/MLE-Agent Workflow.png" alt="image" width="600"/>
 
 ## 📝 Demo Progress
-> Note 1: Before using claude-flow CLI, clean the output folder to avoid unaccurate.
-* [Reference: `claude-flow automation mle-star [options]`](https://github.com/ruvnet/claude-flow/wiki/MLE-STAR-Workflow#-complete-mle-star-options)
-    * Required:
-    * --dataset <path>          Path to dataset file (default: ./data/dataset.csv)
-    * --target <column>         Target column name (default: target)
-    * Core Options:
-        * --claude                  Enable Claude CLI integration (recommended)
-        * --output <dir>            Model output directory (default: ./models/)
-        * --name <experiment>       Experiment name for tracking
-    * Iteration Control:
-        * --search-iterations <n>   Web search iterations (default: 3)
-        * --refinement-iterations <n> Refinement cycles (default: 5)
-        * --max-agents <n>          Maximum agents to spawn (default: 6)
-    * Execution Modes:
-        * --interactive             Use interactive mode with master coordinator
-        * --non-interactive         Force non-interactive mode (default)
-        * --output-format <format>  Output format (stream-json enables chaining)
-    * Advanced:
-        * --chaining                Enable stream-json chaining between agents
-        * --no-chaining             Disable stream-json chaining
-        * --timeout <ms>            Execution timeout (default: 4 hours)
-        * --verbose                 Enable detailed logging
-        * --no-claude-warning       Suppress Claude integration warnings
 
 ### MVP Test - 1
 

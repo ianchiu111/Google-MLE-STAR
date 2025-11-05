@@ -1,5 +1,4 @@
 # Welcome 
-# Welcome 
 Hi, I'm YuChen Chiu. 
 
 This project will going to use the paper written by google cloud team to practice **Machine Learning Engineering Agent via Search and Targeted Refinement Workflow** by two approaches in different branches below:

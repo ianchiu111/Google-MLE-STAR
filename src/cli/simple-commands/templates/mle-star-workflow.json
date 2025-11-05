@@ -57,7 +57,7 @@
       }
     },
     {
-      "id": "ablation_agent",
+      "id": "code_analyze_gent",
       "type": "code-analyzer",
       "name": "Ablation Study Analyst",
       "config": {
@@ -66,9 +66,10 @@
           "jupyter"
         ],
         "capabilities": [
-          "code_review",
-          "ablation_study",
-          "performance_analysis"
+          "architecture_analysis",
+          "code_quality_assessment",
+          "performance_analysis",
+          "technical_debt_management"
         ]
       }
     },
@@ -194,8 +195,8 @@
       "id": "ablation_study",
       "name": "Ablation Analysis of Foundation Model",
       "type": "analysis",
-      "description": "You have to review all the components from  the foundation model and dataset views in ablation study. About datasets, please focus on ${problem_type}, ${characteristics}, ${data_quality_report}, ${recommended_preprocessing}; About model, please read the research summarization from ${recommended_approaches}, ${model_algorithms}, ${benchmark_results} and ${implementation_examples}. After that please summarize with key findings and recommendations about which components to keep, discard or improve. Please ignore .memoryignore folder when processing",
-      "assignTo": "ablation_agent",
+      "description": "You have to review all the components from  the foundation model and dataset views in ablation study. About datasets, please focus on ${problem_type}, ${characteristics}, ${data_quality_report}, ${recommended_preprocessing}; About model, please read the research summarization from ${recommended_approaches}, ${model_algorithms}, ${benchmark_results} and ${implementation_examples}. After that please summarize key findings, recommendations about which components to keep, discard or improve into markdown file as result. Please ignore .memoryignore folder when processing",
+      "assignTo": "code_analyze_gent",
       "depends": ["dataset_analysis", "web_search"],
       "input": { 
         "problem_type": "${dataset_analysis.output.problem_type}", 
@@ -211,14 +212,15 @@
       "output": {
         "highest_impact_component": "string",
         "impact_scores": "object",
-        "improvement_opportunities": "array"
+        "improvement_opportunities": "array",
+        "result": "object"
       }
     },
     {
       "id": "targeted_refinement",
       "name": "Iterative Component Refinement",
       "type": "optimization",
-      "description": "Focus on the ablation study and targeted refinement and generate ways to make the machine learning codes more efficient. It's fine to generate codes, concepts or summarizations. After that, please generate the best model configuration from your refinement. Please ignore .memoryignore folder when processing. ",
+      "description": "Focus on the ablation study and targeted refinement and generate ways to make the machine learning codes more efficient. It's fine to generate codes, concepts or summarizations. After that, please generate the best model configuration from your refinement and summarize them into a markdown file. Please ignore .memoryignore folder when processing.",
       "assignTo": "refinement_agent",
       "depends": ["ablation_study"],
       "input": {
@@ -231,14 +233,15 @@
         "optimized_components": "object",
         "performance_improvements": "object", 
         "best_configuration": "object",
-        "refinement_summary": "object"
+        "refinement_summary": "object",
+        "result": "object"
       }
     },
     {
       "id": "ensemble_creation",
       "name": "Adaptive Ensemble Building",
       "type": "architecture",
-      "description": "Focus on the targeted components and try to generate ensemble model with meta-learning techniques to further improve the original model performance.",
+      "description": "Focus on the targeted components and try to generate ensemble model with meta-learning techniques to further improve the original model performance. After processing, please summarize the ensemble strategy and final performance into a markdown file. Please ignore .memoryignore folder when processing.",
       "assignTo": "ensemble_agent",
       "depends": ["targeted_refinement"],
       "input": {
@@ -256,14 +259,15 @@
         "ensemble_model": "object",
         "ensemble_performance": "object",
         "combination_strategy": "string",
-        "meta_learner_details": "object"
+        "meta_learner_details": "object",
+        "result": "object"
       }
     },
     {
       "id": "validation_and_debugging",
       "name": "Comprehensive Validation & Error Correction",
       "type": "testing",
-      "description": "Rigorous validation with data leakage prevention, error correction, and performance verification",
+      "description": "Rigorous validation with data leakage prevention, error correction, and performance verification. After processing, please generate a detailed validation report including cross-validation scores, detected issues, and final performance metrics into a markdown file. Please ignore .memoryignore folder when processing.",
       "assignTo": "validation_agent",
       "depends": ["targeted_refinement"],
       "input": {
@@ -281,14 +285,15 @@
         "cross_validation_scores": "array",
         "data_leakage_check": "boolean",
         "error_analysis": "object",
-        "final_performance_metrics": "object"
+        "final_performance_metrics": "object",
+        "result": "object"
       }
     },
     {
       "id": "model_deployment_prep",
       "name": "Production Readiness & Deployment",
       "type": "deployment",
-      "description": "Prepare final solutionmodel for production deployment with monitoring, versioning, and documentation",
+      "description": "Prepare final solution model for production deployment with monitoring, versioning, and documentation. After processing, please generate deployment package, model documentation, monitoring configuration, and deployment instructions into a markdown file. Please ignore .memoryignore folder when processing.",
       "assignTo": "orchestrator",
       "depends": ["ensemble_creation", "validation_and_debugging"],
       "input": {
@@ -301,7 +306,8 @@
         "deployment_package": "object",
         "model_documentation": "object",
         "monitoring_config": "object",
-        "deployment_instructions": "string"
+        "deployment_instructions": "string",
+        "result": "object"
       }
     }
   ],

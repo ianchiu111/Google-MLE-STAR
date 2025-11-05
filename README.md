@@ -6,6 +6,55 @@ This project will going to use the paper written by google cloud team to practic
 1. [**Claude-Flow Service**](https://github.com/ianchiu111/Google-MLE-STAR/tree/claude-flow/dev_main)
 2. [**Langgraph + Ollama in Multi-Agent**](https://github.com/ianchiu111/Google-MLE-STAR/tree/main)
 
+## ⚡️ Quick Start
+
+📋 Prerequisites
+1. Node.js 18+ (LTS recommended)
+2. npm 9+ or equivalent package manager
+
+⚠️ Claude Code
+```bash
+# 1. Install Claude Code globally
+npm install -g @anthropic-ai/claude-code
+
+# 2. (Optional) Skip permissions check for faster setup
+claude --dangerously-skip-permissions
+```
+
+🔧 Python Environment
+```bash
+# 1. Create python environment
+pip install -r requirements.txt
+```
+
+🤖 Ollama Model
+```bash
+# 1. Pull ollama model
+ollama pull qwen2.5:7b-instruct
+
+# 2. Initialize the Ollama daemon service
+ollama serve
+
+# 3. Verify service status
+ollama list
+```
+
+✅ Working Demo
+```bash
+# 1. Start the server
+python app.py
+
+# 2. Send a POST request
+POST http://localhost:5001/api/claude-flow/v1
+{
+    "query": "please use the data/train.csv dataset and Sales as target column to predict sales revenue."
+}
+
+# 3. Check the terminal output
+```
+
+<img src="images/work-with-app.png" alt="image" width="600"/>
+
 
 ## 📚 Reference
 * Paer Reading
@@ -26,30 +75,32 @@ This project will going to use the paper written by google cloud team to practic
 ```plaintext
 /Users/yuchen/Google-MLE-Agent/
 ├── .memoryignore/                          ⭐ Testing Records
+│   ├── mvp-testing-1
+│   └── mvp-testing-2
 ├── data/                                   ⭐ Rossmann Sales Predictioin Dataset
-│   ├── data_cleaning.ipynb.                ⭐ Analyze Raw Dataset Myself
+│   ├── data_cleaning.ipynb.                
 │   ├── train.csv                           
 │   ├── test.csv
 │   ├── store.csv
 │   └── sample_submission.csv
-├── images/                                 ⭐ Images for README.md
-├── models/                                 ⭐ Model output directory
+├── images/                                 
+├── models/                                 ⭐ Claude-Flow agent output directory
 ├── Prompts/
 │   └── specialized_agent_prompt.py         ⭐ Agent prompts in langgraph swarm framework
 ├── src/
 │   └── cli/
 │       └── simple-commands/
 │           └── templates/
-│               └── mle-star-workflow.json  ⭐ Template to interact with claude-flow by CLI
+│               └── mle-star-workflow.json  ⭐ Template to interact with claude-flow by command
 ├── Tools/
-│   └── claudeFlow_agent_tool.py            ⭐ Defined tool to extract arguments from user query and use <claude-flow automation> command
-├── .gitattributes                          ⭐ Git LFS (Large File Storage)
-├── .gitignore                              ⭐ Files should be ignored when processing git
+│   └── claudeFlow_agent_tool.py            ⭐ Defined tool to run <claude-flow automation> command
+├── .gitattributes                          
+├── .gitignore                              
 ├── Google-MLE-Agent.pdf                    ⭐ Google MLE_STAR Paper
-├── graph.py                                ⭐ Langgraph Swarm Framework Setup
-├── main.py                                 ⭐ Entry point with natural language to test mle-star workflow
-├── README.md                               ⭐ README Documentation
-└── requirement.txt                         ⭐ Python requirements
+├── graph.py                                ⭐ Langgraph Graph
+├── app.py                                  ⭐ Entry point with natural language to test mle-star workflow
+├── README.md                               
+└── requirements.txt                        ⭐ Python Environment
 ```
 
 ### System Workflow

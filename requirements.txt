@@ -1,3 +1,5 @@
+flash==3.1.2
+flask_cors==6.0.1
 langchain_core==0.3.68
 langchain_openai==0.3.11
 langgraph==0.3.5

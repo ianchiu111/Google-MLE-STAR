@@ -94,7 +94,6 @@ POST http://localhost:5001/api/claude-flow/v1
 │               └── mle-star-workflow.json  ⭐ Template to interact with claude-flow by command
 ├── Tools/
 │   └── claudeFlow_agent_tool.py            ⭐ Defined tool to run <claude-flow automation> command
-├── .gitattributes                          
 ├── .gitignore                              
 ├── Google-MLE-Agent.pdf                    ⭐ Google MLE_STAR Paper
 ├── graph.py                                ⭐ Langgraph Graph

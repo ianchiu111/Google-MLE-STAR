@@ -12,5 +12,6 @@ memo.md
 init
 __pycache__
 Prepare.md
+*.pkl
 
 .claude-flow/metrics/

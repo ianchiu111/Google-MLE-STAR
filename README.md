@@ -104,7 +104,7 @@ POST http://localhost:5001/api/claude-flow/v1
 
 ### System Workflow
 
-Overview of MLE-STAR Framework.
+<img src="images/System-Workflow.png" alt="image" width="600"/>
 
 
 
